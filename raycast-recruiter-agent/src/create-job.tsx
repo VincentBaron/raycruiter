@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation, Icon } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 import MultiDiffusion from "./multi-diffusion";
 
-const jobPayload = require("../../dummy_job_payload_creation.json");
+const jobPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/dummy_job_payload_creation.json", "utf8"));
 
 export default function CreateJobFromDeal(props: { defaultDealName?: string }) {
   const { pop, push } = useNavigation();

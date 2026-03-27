@@ -1,5 +1,32 @@
 import React, { useState, useMemo } from "react";
 import { List, ActionPanel, Action, Icon, Color, showToast, Toast } from "@raycast/api";
+import fs from "fs";
+import path from "path";
+
+function readPartialJsonArray(filePath: string, bytesToRead = 4 * 1024 * 1024) {
+  try {
+    const fd = fs.openSync(filePath, "r");
+    const buffer = Buffer.alloc(bytesToRead);
+    const bytesRead = fs.readSync(fd, buffer as any, 0, bytesToRead, 0);
+    fs.closeSync(fd);
+    
+    let partial = buffer.toString("utf8", 0, bytesRead);
+    
+    const lastObjIdx = partial.lastIndexOf("},");
+    if (lastObjIdx > 0) {
+      return JSON.parse(partial.substring(0, lastObjIdx + 1) + "]");
+    }
+    
+    const fullEndIdx = partial.lastIndexOf("}]");
+    if (fullEndIdx > 0) {
+        return JSON.parse(partial.substring(0, fullEndIdx + 2));
+    }
+    return JSON.parse(partial);
+  } catch (e) {
+    console.error("Partial JSON parse error:", e);
+    return [];
+  }
+}
 
 export default function Persons() {
   const [searchText, setSearchText] = useState("");
@@ -7,7 +34,7 @@ export default function Persons() {
 
   const persons = useMemo(() => {
     try {
-      const data = require("../../persons_cache_2026-03-22_12-18-43.json");
+      const data = readPartialJsonArray("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/persons_cache_2026-03-22_12-18-43.json");
       return data;
     } catch(e) {
       return [];

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { List, ActionPanel, Action, Icon, Color, showToast, Toast, useNavigation, LocalStorage } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 import PowerDialer from "./power-dialer";
 import { LogNoteForm, LogActivityForm } from "./deal-components";
 
 // We dynamically pull the huge dummy dataset from disk locally, simulating a Mantiks API network call.
-const rawMantiksPayload = require("../../mantiks_payload.json");
+const rawMantiksPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/mantiks_payload.json", "utf8"));
 
 interface MantiksLead {
   company_name: string;
@@ -164,7 +166,7 @@ export default function SourceProspects() {
                     <Action
                       title="Schedule Next Activity"
                       icon={Icon.Calendar}
-                      shortcut={{ modifiers: ["cmd"], key: "a" }}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
                       onAction={() => push(<LogActivityForm entityId={`prospect_${lead.lead_email}`} entityTitle={fullName} onSave={() => {}} />)}
                     />
                   </ActionPanel.Section>

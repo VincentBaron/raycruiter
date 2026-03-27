@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { List, Icon, Color, ActionPanel, Action, useNavigation } from "@raycast/api";
 
-import rawDeals from "./deals.json";
-const rawMantiksPayload = require("../../mantiks_payload.json");
+import fs from "fs";
+import path from "path";
+
+const rawDeals = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
+const rawMantiksPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/mantiks_payload.json", "utf8"));
 
 interface Deal {
   id: string;
@@ -200,7 +203,7 @@ export default function SearchDatabases() {
         <List.Section title={`Prospects & Leads (${filteredLeads.length})`}>
           {filteredLeads.map((lead, idx) => (
             <List.Item
-              key={`lead-${lead.lead_email || idx}`}
+              key={`lead-${lead.lead_email || idx}-${idx}`}
               icon={{ source: Icon.Person, tintColor: Color.Blue }}
               title={`${lead.lead_first_name || ""} ${lead.lead_last_name || ""}`.trim() || lead.lead_email}
               subtitle={`${lead.lead_job_title || ""} @ ${lead.company_name || ""}`}

@@ -94,7 +94,7 @@ ${notesMarkdown}
             <Action
               title="Schedule Activity"
               icon={Icon.Calendar}
-              shortcut={{ modifiers: ["cmd"], key: "a" }}
+              shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
               onAction={() => push(<LogActivityForm entityId={`deal_${deal.id}`} entityTitle={deal.title} onSave={loadData} />)}
             />
             {/* The Submenu to update Stages seamlessly */}

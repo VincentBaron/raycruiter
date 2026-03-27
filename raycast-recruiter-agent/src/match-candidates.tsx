@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { List, ActionPanel, Action, Icon, Color } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 
-const jemmoPayload = require("../../jemmo_payload.json");
+const jemmoPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/jemmo_payload.json", "utf8"));
 
 export default function MatchCandidates({ initialJobId }: { initialJobId?: string }) {
   const [searchText, setSearchText] = useState("");

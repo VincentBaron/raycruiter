@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { List, ActionPanel, Action, Icon, Color } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 
 type Candidate = {
   applicant: string;
@@ -13,9 +15,34 @@ type Candidate = {
   shortId?: string;
 };
 
+function readPartialJsonArray(filePath: string, bytesToRead = 3 * 1024 * 1024) {
+  try {
+    const fd = fs.openSync(filePath, "r");
+    const buffer = Buffer.alloc(bytesToRead);
+    const bytesRead = fs.readSync(fd, buffer as any, 0, bytesToRead, 0);
+    fs.closeSync(fd);
+    
+    let partial = buffer.toString("utf8", 0, bytesRead);
+    
+    const lastObjIdx = partial.lastIndexOf("},");
+    if (lastObjIdx > 0) {
+      return JSON.parse(partial.substring(0, lastObjIdx + 1) + "]");
+    }
+    
+    const fullEndIdx = partial.lastIndexOf("}]");
+    if (fullEndIdx > 0) {
+        return JSON.parse(partial.substring(0, fullEndIdx + 2));
+    }
+    return JSON.parse(partial);
+  } catch (e) {
+    console.error("Partial JSON parse error:", e);
+    return [];
+  }
+}
+
 export default function ViewCandidates() {
   const [searchText, setSearchText] = useState("");
-  const rawCandidates: Candidate[] = require("../../candidates.json");
+  const rawCandidates: Candidate[] = readPartialJsonArray("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/candidates.json");
 
   const candidatesWithIds = useMemo(() => {
     return rawCandidates.map((c, i) => ({ ...c, shortId: `c${i + 1}` }));

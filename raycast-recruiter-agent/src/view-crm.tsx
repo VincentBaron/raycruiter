@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { List, ActionPanel, Action, Icon, Color, LocalStorage, showToast, Toast } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 import { DealDetail } from "./deal-components";
 import CreateJobFromDeal from "./create-job";
 import MatchCandidates from "./match-candidates";
@@ -23,30 +25,30 @@ export default function CrmView() {
   const [selectedPipeline, setSelectedPipeline] = useState<string>("all");
   const [diffused, setDiffused] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const dealsData = require("./deals.json");
+  const dealsData = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
 
   useEffect(() => {
     async function load() {
-       const rec: Record<string, boolean> = {};
-       for (const d of dealsData) {
-          const val = await LocalStorage.getItem(`diffused_deal_${d.id}`);
-          if (val) rec[d.id] = true;
-       }
-       setDiffused(rec);
+      const rec: Record<string, boolean> = {};
+      for (const d of dealsData) {
+        const val = await LocalStorage.getItem(`diffused_deal_${d.id}`);
+        if (val) rec[d.id] = true;
+      }
+      setDiffused(rec);
     }
     load();
   }, []);
 
   async function toggleDiffused(dealId: string) {
-     const nextVal = !diffused[dealId];
-     setDiffused({ ...diffused, [dealId]: nextVal });
-     if (nextVal) {
-        await LocalStorage.setItem(`diffused_deal_${dealId}`, "true");
-        showToast({ style: Toast.Style.Success, title: "Deal Diffused 📢" });
-     } else {
-        await LocalStorage.removeItem(`diffused_deal_${dealId}`);
-        showToast({ style: Toast.Style.Success, title: "Diffusion Removed" });
-     }
+    const nextVal = !diffused[dealId];
+    setDiffused({ ...diffused, [dealId]: nextVal });
+    if (nextVal) {
+      await LocalStorage.setItem(`diffused_deal_${dealId}`, "true");
+      showToast({ style: Toast.Style.Success, title: "Deal Diffused 📢" });
+    } else {
+      await LocalStorage.removeItem(`diffused_deal_${dealId}`);
+      showToast({ style: Toast.Style.Success, title: "Diffusion Removed" });
+    }
   }
 
   const dealsWithIds = useMemo(() => {
@@ -83,7 +85,7 @@ export default function CrmView() {
   const sortedGroupKeys = Object.keys(groupedDeals).sort();
 
   return (
-    <List 
+    <List
       isShowingDetail
       navigationTitle="Deals Pipelines"
       searchBarPlaceholder="Search pipeline deals..."
@@ -102,7 +104,7 @@ export default function CrmView() {
         const isExpanded = expandedGroups[groupKey];
         const displayedDeals = isExpanded ? dealsInGroup : dealsInGroup.slice(0, 3);
         const hasMore = dealsInGroup.length > 3;
-        
+
         return (
           <List.Section
             key={groupKey}
@@ -130,7 +132,7 @@ export default function CrmView() {
                 let icon: Icon = Icon.Calendar;
                 let color: Color = Color.PrimaryText;
                 let text = "Activity";
-                
+
                 if (diffDays < 0) {
                   text = "Past Due";
                   icon = Icon.Warning;
@@ -146,15 +148,15 @@ export default function CrmView() {
                 }
 
                 accessories.push({
-                   text: text,
-                   icon: { source: icon, tintColor: color },
-                   tooltip: `Next Activity: ${activityDate.toLocaleDateString()}`
+                  text: text,
+                  icon: { source: icon, tintColor: color },
+                  tooltip: `Next Activity: ${activityDate.toLocaleDateString()}`
                 });
               } else {
-                 accessories.push({
-                   text: "No Activity",
-                   icon: { source: Icon.MinusCircle, tintColor: Color.SecondaryText }
-                 });
+                accessories.push({
+                  text: "No Activity",
+                  icon: { source: Icon.MinusCircle, tintColor: Color.SecondaryText }
+                });
               }
 
               accessories.push(

@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { List, ActionPanel, Action, Icon, Color, useNavigation } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 import { LogNoteForm, LogActivityForm } from "./deal-components";
 import MatchCandidates from "./match-candidates";
 
@@ -22,7 +24,7 @@ type Deal = {
 export default function PowerDialer({ initialSearchText = "", injectedPerson }: { initialSearchText?: string, injectedPerson?: any }) {
   const { push } = useNavigation();
   const [searchText, setSearchText] = useState(initialSearchText);
-  const dealsData: Deal[] = require("./deals.json");
+  const dealsData: Deal[] = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
 
   // Extract unique people from deals
   const people = useMemo(() => {
@@ -163,7 +165,7 @@ export default function PowerDialer({ initialSearchText = "", injectedPerson }: 
                     <Action
                       title="Schedule Activity"
                       icon={Icon.Calendar}
-                      shortcut={{ modifiers: ["cmd"], key: "a" }}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
                       onAction={() => push(<LogActivityForm entityId={`deal_${person.originalDeal.id}`} entityTitle={person.originalDeal.title} onSave={() => { }} />)}
                     />
                     <Action.Push

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { List, ActionPanel, Action, Icon, Color, useNavigation } from "@raycast/api";
+import fs from "fs";
+import path from "path";
 
-const jemmoPayload = require("../../jemmo_payload.json");
-const activeJobsData = require("../../active_jobs.json");
+const jemmoPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/jemmo_payload.json", "utf8"));
+const activeJobsData = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/active_jobs.json", "utf8"));
 
 const fakeStages = [
   { id: "s1", name: "Sourced", color: Color.SecondaryText },

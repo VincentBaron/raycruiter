@@ -42,6 +42,10 @@ yarn-error.log*
 dummy_*.json
 *.json
 
+
 # Agent Rules
 .agent/
 .geminirules
+
+# Extensions
+raycast-recruiter-agent/linear-raycast-extension/

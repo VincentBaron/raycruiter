@@ -1,44 +1,27 @@
-import React from "react";
-import { List, ActionPanel, Action, Icon, useNavigation } from "@raycast/api";
+import { useCachedPromise } from "@raycast/utils";
+import { EntityList } from "./views/EntityList";
 
-import LocalSearch from "./local-search";
-import QueryKalent from "./query-kalent";
-import ViewCandidates from "./view-candidates";
-import MatchCandidates from "./match-candidates";
-import TopTalents from "./top-talents";
+import mockDeals from "./data/mockDeals.json";
+import mockJobs from "./data/mockJobs.json";
+import mockProspects from "./data/mockProspects.json";
+import mockCandidates from "./data/mockCandidates.json";
 
-const SEARCH_MODULES = [
-  { id: "local", title: "Local DB Search", subtitle: "Search Organizations, Deals, & Prospects natively", icon: Icon.MagnifyingGlass, component: <LocalSearch /> },
-  { id: "kalent", title: "Kalent Talent Query", subtitle: "Search the global Kalent Database", icon: Icon.Globe, component: <QueryKalent /> },
-  { id: "ats", title: "View Candidates", subtitle: "Browse your synced ATS candidates", icon: Icon.Person, component: <ViewCandidates /> },
-  { id: "jemmo", title: "Jemmo AI Matching", subtitle: "Vector-rank candidates using Jemmo AI", icon: Icon.Star, component: <MatchCandidates /> },
-  { id: "top", title: "Top Fresh Talents", subtitle: "Source high-signal prospects", icon: Icon.Trophy, component: <TopTalents /> }
-];
+export default function Command() {
+  const { isLoading: isLoadingDeals, data: deals } = useCachedPromise(async () => mockDeals, []);
+  const { isLoading: isLoadingJobs, data: jobs } = useCachedPromise(async () => mockJobs, []);
+  const { isLoading: isLoadingProspects, data: prospects } = useCachedPromise(async () => mockProspects, []);
+  const { isLoading: isLoadingCandidates, data: candidates } = useCachedPromise(async () => mockCandidates, []);
 
-export default function SearchDatabasesHub() {
-  const { push } = useNavigation();
+  const isLoading = isLoadingDeals || isLoadingJobs || isLoadingProspects || isLoadingCandidates;
 
   return (
-    <List navigationTitle="Global AI Search" searchBarPlaceholder="Select a search module...">
-      <List.Section title="Raycruiter Intelligence Hub">
-        {SEARCH_MODULES.map((mod) => (
-          <List.Item
-            key={mod.id}
-            icon={mod.icon}
-            title={mod.title}
-            subtitle={mod.subtitle}
-            actions={
-              <ActionPanel>
-                <Action 
-                   title={`Open ${mod.title}`} 
-                   icon={Icon.ChevronRight} 
-                   onAction={() => push(mod.component)} 
-                />
-              </ActionPanel>
-            }
-          />
-        ))}
-      </List.Section>
-    </List>
+    <EntityList 
+      isLoading={isLoading} 
+      deals={deals || []} 
+      jobs={jobs || []} 
+      prospects={prospects || []} 
+      candidates={candidates || []} 
+      navigationTitle="Global Search"
+    />
   );
 }

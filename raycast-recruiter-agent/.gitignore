@@ -42,3 +42,6 @@ yarn-error.log*
 dummy_*.json
 *.json
 .agent/
+
+# Extensions
+linear-raycast-extension/

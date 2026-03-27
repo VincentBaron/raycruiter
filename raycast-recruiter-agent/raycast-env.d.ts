@@ -16,40 +16,24 @@ type ExtensionPreferences = {
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
-  /** Preferences accessible in the `raycruiter-menu` command */
-  export type RaycruiterMenu = ExtensionPreferences & {}
-  /** Preferences accessible in the `power-dialer` command */
-  export type PowerDialer = ExtensionPreferences & {}
+  /** Preferences accessible in the `ask-raycruiter` command */
+  export type AskRaycruiter = ExtensionPreferences & {}
   /** Preferences accessible in the `search-databases` command */
   export type SearchDatabases = ExtensionPreferences & {}
-  /** Preferences accessible in the `configure-integrations` command */
-  export type ConfigureIntegrations = ExtensionPreferences & {}
-  /** Preferences accessible in the `view-candidates` command */
-  export type ViewCandidates = ExtensionPreferences & {}
-  /** Preferences accessible in the `match-candidates` command */
-  export type MatchCandidates = ExtensionPreferences & {}
-  /** Preferences accessible in the `top-talents` command */
-  export type TopTalents = ExtensionPreferences & {}
-  /** Preferences accessible in the `query-kalent` command */
-  export type QueryKalent = ExtensionPreferences & {}
+  /** Preferences accessible in the `my-pipeline` command */
+  export type MyPipeline = ExtensionPreferences & {}
+  /** Preferences accessible in the `view-multidiffusion` command */
+  export type ViewMultidiffusion = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
-  /** Arguments passed to the `raycruiter-menu` command */
-  export type RaycruiterMenu = {}
-  /** Arguments passed to the `power-dialer` command */
-  export type PowerDialer = {}
+  /** Arguments passed to the `ask-raycruiter` command */
+  export type AskRaycruiter = {}
   /** Arguments passed to the `search-databases` command */
   export type SearchDatabases = {}
-  /** Arguments passed to the `configure-integrations` command */
-  export type ConfigureIntegrations = {}
-  /** Arguments passed to the `view-candidates` command */
-  export type ViewCandidates = {}
-  /** Arguments passed to the `match-candidates` command */
-  export type MatchCandidates = {}
-  /** Arguments passed to the `top-talents` command */
-  export type TopTalents = {}
-  /** Arguments passed to the `query-kalent` command */
-  export type QueryKalent = {}
+  /** Arguments passed to the `my-pipeline` command */
+  export type MyPipeline = {}
+  /** Arguments passed to the `view-multidiffusion` command */
+  export type ViewMultidiffusion = {}
 }
 

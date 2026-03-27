@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Action, ActionPanel, Icon, useNavigation, Form, showToast, Toast } from "@raycast/api";
 import { useMockData } from "../../hooks/useMockData";
+import { EntityDetail } from "../../views/EntityDetail";
 
 function CreateJobForm({ dealId }: { dealId: string }) {
   const { pop } = useNavigation();
@@ -66,6 +67,7 @@ export function DealActions({ deal }: { deal: any }) {
   return (
     <ActionPanel>
       <ActionPanel.Section>
+        <Action.Push title="Open Details" icon={Icon.Sidebar} target={<EntityDetail type="Deal" data={deal} />} />
         <Action.Push title="Create Job" icon={Icon.Plus} target={<CreateJobForm dealId={deal.id} />} shortcut={{ modifiers: ["cmd"], key: "n" }} />
         
         <ActionPanel.Submenu title="Assign Member" icon={Icon.Person} shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}>

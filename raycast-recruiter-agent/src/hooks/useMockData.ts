@@ -14,3 +14,9 @@ export function useMockData() {
 
   return { deals, setDeals, jobs, setJobs, prospects, setProspects, candidates, setCandidates };
 }
+
+// Simulated stable dummy offset for mock data visualization
+export const getFakeDueDateOffset = (id: string) => {
+  const hash = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return (hash % 11) - 3; // Returns random offset between -3 (late) to +7 (upcoming)
+};

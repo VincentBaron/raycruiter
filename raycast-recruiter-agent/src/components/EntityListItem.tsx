@@ -1,27 +1,62 @@
-import { List, Icon } from "@raycast/api";
+import { List, Icon, Image, Color } from "@raycast/api";
 import { DealActions } from "./actions/DealActions";
 import { JobActions } from "./actions/JobActions";
 import { ProspectActions } from "./actions/ProspectActions";
 import { CandidateActions } from "./actions/CandidateActions";
-import { EntityTag } from "./Tag";
-import { SignalStrengthIcon, CandidateScoreIcon, StatusIcon } from "./icons";
+import { SignalStrengthIcon } from "./icons";
+import { getFakeDueDateOffset } from "../hooks/useMockData";
 
 interface EntityProps {
   type: "Deal" | "Job" | "Prospect" | "Candidate";
   data: any;
 }
 
+const getAvatar = (name: string) => {
+  if (name.includes("Marie")) return { source: "marie.png", mask: Image.Mask.Circle };
+  if (name.includes("Alex")) return { source: "alex.jpeg", mask: Image.Mask.Circle };
+  if (name.includes("Jane")) return { source: "1747670127259.jpeg", mask: Image.Mask.Circle }; 
+  return Icon.PersonCircle;
+};
+
 export function EntityListItem({ type, data }: EntityProps) {
   let title = data.name || data.title;
   let subtitle = data.clientName || data.company || "";
   let icon: any = Icon.Circle;
-  let accessories: List.Item.Accessory[] = [EntityTag({ type: type as any })];
+
+  const actionIcon = type === "Prospect" ? Icon.Envelope : type === "Candidate" ? Icon.Phone : Icon.Calendar;
+  
+  const daysDiff = data.dueDate ? data.dueDate : getFakeDueDateOffset(data.id);
+  
+  let dateText = "";
+  let dateColor: Color.ColorLike = Color.Blue;
+  
+  if (daysDiff < 0) {
+    dateText = `${Math.abs(daysDiff)}d`;
+    dateColor = Color.Red;
+  } else if (daysDiff === 0) {
+    dateText = "Today";
+    dateColor = Color.Green;
+  } else {
+    dateText = `${daysDiff}d`;
+    dateColor = Color.Blue;
+  }
+
+  const rawDate = data.createdAt || data.appliedAt;
+  const createdStr = rawDate ? new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Today";
+  const assignee = data.assignee || (type === "Candidate" ? "Marie" : "Alex Recruiter");
+
+  let accessories: List.Item.Accessory[] = [
+    { icon: actionIcon, tooltip: "Next Action Type" },
+    { text: dateText, icon: { source: Icon.CircleFilled, tintColor: dateColor }, tooltip: "Due Date" },
+    { text: createdStr, tooltip: "Created" },
+    { icon: getAvatar(assignee), tooltip: `Assignee: ${assignee}` }
+  ];
+
   let ActionsComponent = null;
 
   switch (type) {
     case "Deal":
       icon = SignalStrengthIcon({ strength: ["won", "open"].includes(data.status) ? "high" : "low" });
-      if (data.assignee) accessories.unshift({ text: data.assignee, icon: Icon.Person });
       ActionsComponent = <DealActions deal={data} />;
       break;
 
@@ -33,14 +68,12 @@ export function EntityListItem({ type, data }: EntityProps) {
 
     case "Prospect":
       icon = SignalStrengthIcon({ strength: data.signalStrength });
-      if (data.email) accessories.unshift({ tooltip: data.email, icon: Icon.Envelope });
       ActionsComponent = <ProspectActions prospect={data} />;
       break;
 
     case "Candidate":
       icon = SignalStrengthIcon({ strength: ["hired", "offer", "interview"].includes(data.stage) ? "high" : "medium" });
-      subtitle = `Applied: ${new Date(data.appliedAt).toLocaleDateString()}`;
-      accessories.unshift({ text: data.stage.toUpperCase() });
+      subtitle = `Applied: ${createdStr}`;
       ActionsComponent = <CandidateActions candidate={data} />;
       break;
   }

@@ -1,4 +1,4 @@
-import { Detail, ActionPanel } from "@raycast/api";
+import { Detail, ActionPanel, Action } from "@raycast/api";
 
 export function EntityDetail({ type, data }: { type: string, data: any }) {
   const title = data.name || data.title;
@@ -26,7 +26,8 @@ export function EntityDetail({ type, data }: { type: string, data: any }) {
       }
       actions={
         <ActionPanel>
-           {/* Usually actions are passed down or repeated here, but for mock, escaping brings user back to list */}
+           <Action.OpenInBrowser title="Open in Application" url={`https://your-ats-app.com/${type.toLowerCase()}/${data.id}`} shortcut={{ modifiers: [], key: "enter" }} />
+           <Action.CopyToClipboard title="Copy ID" content={data.id} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }} />
         </ActionPanel>
       }
     />

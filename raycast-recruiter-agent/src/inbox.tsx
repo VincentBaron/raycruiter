@@ -1,19 +1,23 @@
 import { List } from "@raycast/api";
 import { useState } from "react";
-import { useMockData } from "./hooks/useMockData";
+import { useMockData, getFakeDueDateOffset } from "./hooks/useMockData";
 import { EntityListItem } from "./components/EntityListItem";
 
 export default function Command() {
   const { deals, jobs, prospects, candidates } = useMockData();
   const [searchText, setSearchText] = useState("");
 
-  // Create a unified inbox Array wrapping each entity type for simple mapping
   const allItems = [
     ...deals.map(d => ({ type: "Deal", data: d, score: d.status === "open" ? 3 : 1 })),
     ...jobs.map(j => ({ type: "Job", data: j, score: j.status === "open" ? 2 : 1 })),
     ...prospects.map(p => ({ type: "Prospect", data: p, score: p.signalStrength === "high" ? 3 : 2 })),
-    ...candidates.map(c => ({ type: "Candidate", data: c, score: 3 })) // Highly active pipeline
-  ].sort((a, b) => b.score - a.score);
+    ...candidates.map(c => ({ type: "Candidate", data: c, score: 3 }))
+  ].sort((a, b) => {
+    const dueA = a.data.dueDate || getFakeDueDateOffset(a.data.id);
+    const dueB = b.data.dueDate || getFakeDueDateOffset(b.data.id);
+    if (dueA !== dueB) return dueA - dueB;
+    return b.score - a.score;
+  });
 
   const filteredItems = allItems.filter(({ data }) => {
     const name = data.name || data.title || "";

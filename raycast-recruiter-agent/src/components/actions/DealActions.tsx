@@ -11,6 +11,7 @@ function CreateJobForm({ dealId }: { dealId: string }) {
       id: `job-${Date.now()}`,
       dealId,
       title: values.title,
+      description: values.description,
       status: "open",
       location: "Remote",
       salary: values.salary,
@@ -32,6 +33,11 @@ function CreateJobForm({ dealId }: { dealId: string }) {
     >
       <Form.TextField id="title" title="Job Title" placeholder="e.g. Lead Engineer" autoFocus />
       <Form.TextField id="salary" title="Salary Range" placeholder="e.g. $100k - $120k" />
+      <Form.TextArea 
+        id="description" 
+        title="Job Description" 
+        defaultValue="[AI Generated Profile]\nWe are looking for a highly skilled individual with 5+ years of experience in the required modern tech stacks. You will be responsible for scaling infrastructure and driving high priority initiatives across cross-functional teams."
+      />
     </Form>
   );
 }
@@ -45,6 +51,18 @@ export function DealActions({ deal }: { deal: any }) {
     await showToast({ style: Toast.Style.Success, title: `Assigned to ${memberName}` });
   };
 
+  const changeStatus = async () => {
+    const nextStatus = deal.status === "open" ? "won" : deal.status === "won" ? "lost" : "open";
+    const updated = deals.map(d => d.id === deal.id ? { ...d, status: nextStatus } : d);
+    setDeals(updated);
+    await showToast({ style: Toast.Style.Success, title: `Deal Status: ${nextStatus.toUpperCase()}` });
+  };
+
+  const deleteDeal = async () => {
+    setDeals(deals.filter(d => d.id !== deal.id));
+    await showToast({ style: Toast.Style.Success, title: "Deal Deleted" });
+  };
+
   return (
     <ActionPanel>
       <ActionPanel.Section>
@@ -56,12 +74,12 @@ export function DealActions({ deal }: { deal: any }) {
           <Action title="Alex Recruiter" onAction={() => assignMember("Alex Recruiter")} />
         </ActionPanel.Submenu>
 
-        <Action title="Edit Deal" icon={Icon.Pencil} onAction={() => console.log("Edit Deal", deal.id)} shortcut={{ modifiers: ["cmd"], key: "e" }} />
-        <Action title="Change Status" icon={Icon.ChevronUp} onAction={() => console.log("Change Status", deal.id)} shortcut={{ modifiers: ["cmd", "shift"], key: "s" }} />
+        <Action title="Change Status" icon={Icon.ChevronUp} onAction={changeStatus} shortcut={{ modifiers: ["cmd", "shift"], key: "s" }} />
+        <Action title="Edit Deal" icon={Icon.Pencil} onAction={() => showToast({title:"Opening Edit Form"})} shortcut={{ modifiers: ["cmd"], key: "e" }} />
       </ActionPanel.Section>
       <ActionPanel.Section>
         <Action.CopyToClipboard title="Copy ID" content={deal.id} />
-        <Action title="Delete Deal" icon={Icon.Trash} style={Action.Style.Destructive} onAction={() => console.log("Delete Deal", deal.id)} shortcut={{ modifiers: ["ctrl"], key: "x" }} />
+        <Action title="Delete Deal" icon={Icon.Trash} style={Action.Style.Destructive} onAction={deleteDeal} shortcut={{ modifiers: ["ctrl"], key: "x" }} />
       </ActionPanel.Section>
     </ActionPanel>
   );

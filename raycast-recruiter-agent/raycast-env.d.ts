@@ -22,6 +22,8 @@ declare namespace Preferences {
   export type SearchDatabases = ExtensionPreferences & {}
   /** Preferences accessible in the `my-pipeline` command */
   export type MyPipeline = ExtensionPreferences & {}
+  /** Preferences accessible in the `inbox` command */
+  export type Inbox = ExtensionPreferences & {}
   /** Preferences accessible in the `view-multidiffusion` command */
   export type ViewMultidiffusion = ExtensionPreferences & {}
 }
@@ -33,6 +35,8 @@ declare namespace Arguments {
   export type SearchDatabases = {}
   /** Arguments passed to the `my-pipeline` command */
   export type MyPipeline = {}
+  /** Arguments passed to the `inbox` command */
+  export type Inbox = {}
   /** Arguments passed to the `view-multidiffusion` command */
   export type ViewMultidiffusion = {}
 }

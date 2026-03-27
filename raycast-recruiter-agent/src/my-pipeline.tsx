@@ -1,22 +1,18 @@
-import { useCachedPromise } from "@raycast/utils";
 import { EntityList } from "./views/EntityList";
-
-import mockDeals from "./data/mockDeals.json";
-import mockProspects from "./data/mockProspects.json";
+import { useMockData } from "./hooks/useMockData";
 
 export default function Command() {
-  // In a real app, this would fetch data filtered by the currentUser's ID
-  const { isLoading: isLoadingDeals, data: deals } = useCachedPromise(async () => mockDeals.filter(d => d.assignee === "Jane Doe"), []);
-  const { isLoading: isLoadingProspects, data: prospects } = useCachedPromise(async () => mockProspects, []); // Assuming all are in Jane's pipeline for mock
+  const { deals, prospects } = useMockData();
 
-  const isLoading = isLoadingDeals || isLoadingProspects;
+  const activeDeals = deals.filter((d: any) => d.assignee === "Jane Doe");
+  const activeProspects = prospects; // Assuming all are in Jane's pipeline
 
   return (
     <EntityList 
-      isLoading={isLoading} 
-      deals={deals || []} 
+      isLoading={false} 
+      deals={activeDeals} 
       jobs={[]} 
-      prospects={prospects || []} 
+      prospects={activeProspects} 
       candidates={[]} 
       navigationTitle="My Pipeline"
     />

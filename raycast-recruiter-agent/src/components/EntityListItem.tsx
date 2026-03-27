@@ -20,13 +20,13 @@ export function EntityListItem({ type, data }: EntityProps) {
 
   switch (type) {
     case "Deal":
-      icon = StatusIcon({ status: data.status });
+      icon = SignalStrengthIcon({ strength: ["won", "open"].includes(data.status) ? "high" : "low" });
       if (data.assignee) accessories.unshift({ text: data.assignee, icon: Icon.Person });
       ActionsComponent = <DealActions deal={data} />;
       break;
 
     case "Job":
-      icon = StatusIcon({ status: data.status });
+      icon = SignalStrengthIcon({ strength: data.status === "open" ? "medium" : "low" });
       subtitle = `${data.location} • ${data.salary}`;
       ActionsComponent = <JobActions job={data} />;
       break;
@@ -38,7 +38,7 @@ export function EntityListItem({ type, data }: EntityProps) {
       break;
 
     case "Candidate":
-      icon = CandidateScoreIcon({ score: data.score });
+      icon = SignalStrengthIcon({ strength: ["hired", "offer", "interview"].includes(data.stage) ? "high" : "medium" });
       subtitle = `Applied: ${new Date(data.appliedAt).toLocaleDateString()}`;
       accessories.unshift({ text: data.stage.toUpperCase() });
       ActionsComponent = <CandidateActions candidate={data} />;

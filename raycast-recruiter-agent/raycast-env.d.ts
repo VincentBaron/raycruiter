@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** API Key - API Key for AI Providers */
+  /** API Key - API Key for Google Gemini API Providers */
   "apiKey"?: string
 }
 
@@ -16,6 +16,8 @@ type ExtensionPreferences = {
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
+  /** Preferences accessible in the `ask-raycruiter` command */
+  export type AskRaycruiter = ExtensionPreferences & {}
   /** Preferences accessible in the `search-databases` command */
   export type SearchDatabases = ExtensionPreferences & {}
   /** Preferences accessible in the `my-pipeline` command */
@@ -27,6 +29,8 @@ declare namespace Preferences {
 }
 
 declare namespace Arguments {
+  /** Arguments passed to the `ask-raycruiter` command */
+  export type AskRaycruiter = {}
   /** Arguments passed to the `search-databases` command */
   export type SearchDatabases = {}
   /** Arguments passed to the `my-pipeline` command */

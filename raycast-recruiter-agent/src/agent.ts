@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import { getPreferenceValues } from "@raycast/api";
 
 

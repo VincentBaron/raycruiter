@@ -30,29 +30,37 @@ export function EntityList({ isLoading, deals, jobs, prospects, candidates, navi
       searchBarPlaceholder={`Search ${navigationTitle}...`}
       navigationTitle={navigationTitle}
     >
-      <List.Section title="Deals">
-        {filterData(deals).map(deal => (
-          <EntityListItem key={deal.id} type="Deal" data={deal} />
-        ))}
-      </List.Section>
+      {filterData(deals).length > 0 && (
+        <List.Section title="Deals">
+          {filterData(deals).map(deal => (
+            <EntityListItem key={deal.id} type="Deal" data={deal} />
+          ))}
+        </List.Section>
+      )}
 
-      <List.Section title="Jobs">
-        {filterData(jobs).map(job => (
-          <EntityListItem key={job.id} type="Job" data={job} />
-        ))}
-      </List.Section>
+      {filterData(jobs).length > 0 && (
+        <List.Section title="Jobs">
+          {filterData(jobs).map(job => (
+            <EntityListItem key={job.id} type="Job" data={job} />
+          ))}
+        </List.Section>
+      )}
 
-      <List.Section title="Prospects">
-        {filterData(prospects).map(prospect => (
-          <EntityListItem key={prospect.id} type="Prospect" data={prospect} />
-        ))}
-      </List.Section>
+      {filterData(prospects).length > 0 && (
+        <List.Section title="Prospects">
+          {filterData(prospects).map(prospect => (
+            <EntityListItem key={prospect.id} type="Prospect" data={prospect} />
+          ))}
+        </List.Section>
+      )}
 
-      <List.Section title="Candidates">
-        {filterData(candidates).map(candidate => (
-          <EntityListItem key={candidate.id} type="Candidate" data={candidate} />
-        ))}
-      </List.Section>
+      {filterData(candidates).length > 0 && (
+        <List.Section title="Candidates">
+          {filterData(candidates).map(candidate => (
+            <EntityListItem key={candidate.id} type="Candidate" data={candidate} />
+          ))}
+        </List.Section>
+      )}
     </List>
   );
 }

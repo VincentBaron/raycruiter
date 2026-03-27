@@ -1,30 +1,76 @@
-import { Form, ActionPanel, Action, showToast, Toast } from "@raycast/api";
-import { useState } from "react";
+import React, { useState } from "react";
+import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import { useMockData } from "./hooks/useMockData";
 
 export default function Command() {
+  const [messages, setMessages] = useState<{role: string, text: string}[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const { prospects, setProspects } = useMockData();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (values: any) => {
+  const onSubmit = () => {
+    if (!searchText.trim()) return;
+    const userQuery = searchText;
+    setMessages(prev => [{ role: "user", text: userQuery }, ...prev]);
+    setSearchText("");
     setIsLoading(true);
-    await showToast({ style: Toast.Style.Animated, title: "Generating Payload..." });
-    
-    setTimeout(async () => {
+
+    setTimeout(() => {
+      const aiResponse = `Generated 5 new leads based on "${userQuery}" and added them to Prospects.`;
+      
+      const newProspect = {
+        id: `pro-ai-${Date.now()}`,
+        name: `AI Generated Lead`,
+        title: "Software Engineer",
+        company: "Tech Startup",
+        signalStrength: "high",
+      };
+      setProspects([...prospects, newProspect]);
+      
+      setMessages(prev => [{ role: "ai", text: aiResponse }, ...prev]);
       setIsLoading(false);
-      await showToast({ style: Toast.Style.Success, title: "Action executed via Jemmo API" });
     }, 1500);
   };
 
   return (
-    <Form
+    <List 
       isLoading={isLoading}
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm title="Execute AI Command" onSubmit={handleSubmit} />
-        </ActionPanel>
-      }
+      searchBarPlaceholder="Ask Raycruiter: 'Generate leads for tech startups...'"
+      searchText={searchText}
+      onSearchTextChange={setSearchText}
+      navigationTitle="Ask Raycruiter"
     >
-      <Form.Description text="Interact with your ATS naturally. Generated leads will automatically create Prospects." />
-      <Form.TextArea id="prompt" title="Ask Raycruiter" placeholder="e.g., Generate 20 leads from mid size tech startups..." autoFocus />
-    </Form>
+      {searchText.length > 0 && (
+        <List.Item 
+          title={`Ask Raycruiter to '${searchText}'`} 
+          icon={Icon.Wand}
+          actions={
+            <ActionPanel>
+              <Action title="Send Request" icon={Icon.Message} onAction={onSubmit} />
+            </ActionPanel>
+          }
+        />
+      )}
+      
+      {messages.map((msg, i) => (
+        <List.Item
+          key={i}
+          title={msg.text}
+          icon={msg.role === "user" ? Icon.PersonCircle : Icon.Stars}
+          actions={
+            <ActionPanel>
+              <Action.CopyToClipboard content={msg.text} title="Copy Message" />
+            </ActionPanel>
+          }
+        />
+      ))}
+      {messages.length === 0 && searchText.length === 0 && (
+        <List.EmptyView 
+          title="Ask Raycruiter" 
+          description="Try asking: 'Generate 20 leads with this amount of employees...'" 
+          icon={Icon.Stars} 
+        />
+      )}
+    </List>
   );
 }

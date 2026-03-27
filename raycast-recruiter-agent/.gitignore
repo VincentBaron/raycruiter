@@ -44,4 +44,4 @@ dummy_*.json
 .agent/
 
 # Extensions
-linear-raycast-extension/
+# linear-raycast-extension/

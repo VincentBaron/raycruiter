@@ -1,0 +1,47 @@
+# Dependency directories
+node_modules/
+
+# Build and Output
+dist/
+build/
+assets/raycast-env.d.ts
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Raycast specific
+.raycast/
+
+# OS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Temporaries, caches, and test payloads
+*cache*.json
+*payload*.json
+*test*.json
+dummy_*.json
+*.json
+
+# Agent Rules
+.agent/
+.geminirules

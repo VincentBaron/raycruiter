@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { List, ActionPanel, Action, Icon, Color, useNavigation } from "@raycast/api";
+import { List, ActionPanel, Action, Icon, Color, useNavigation, LocalStorage } from "@raycast/api";
 import fs from "fs";
 import path from "path";
 import { LogNoteForm, LogActivityForm } from "./deal-components";
@@ -24,6 +24,26 @@ type Deal = {
 export default function PowerDialer({ initialSearchText = "", injectedPerson }: { initialSearchText?: string, injectedPerson?: any }) {
   const { push } = useNavigation();
   const [searchText, setSearchText] = useState(initialSearchText);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!initialSearchText) {
+      LocalStorage.getItem<string>("power_dialer_search").then(v => { if (v) setSearchText(v); });
+    }
+    LocalStorage.getItem<string>("power_dialer_selection").then(v => { if (v) setSelectedId(v); });
+  }, [initialSearchText]);
+
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    LocalStorage.setItem("power_dialer_search", text);
+  };
+
+  const handleSelection = (id: string | null) => {
+    if (id) {
+      setSelectedId(id);
+      LocalStorage.setItem("power_dialer_selection", id);
+    }
+  };
   const dealsData: Deal[] = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
 
   // Extract unique people from deals
@@ -88,7 +108,10 @@ export default function PowerDialer({ initialSearchText = "", injectedPerson }: 
   return (
     <List
       isShowingDetail
-      onSearchTextChange={setSearchText}
+      searchText={searchText}
+      onSearchTextChange={handleSearchChange}
+      selectedItemId={selectedId || undefined}
+      onSelectionChange={handleSelection}
       navigationTitle="Power Dialer"
       searchBarPlaceholder="Search persons to dial (e.g. p1)..."
     >
@@ -130,6 +153,7 @@ export default function PowerDialer({ initialSearchText = "", injectedPerson }: 
 
           return (
             <List.Item
+              id={person.shortId}
               key={person.shortId}
               title={`[${person.shortId}] ${person.name} — ${person.associatedDeal}`}
               icon={{ source: Icon.PersonCircle, tintColor: person.imported_from === "mantiks" ? Color.Red : Color.Blue }}

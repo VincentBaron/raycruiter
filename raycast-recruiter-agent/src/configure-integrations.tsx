@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Grid, ActionPanel, Action, Icon, Color, LocalStorage, Form, useNavigation, showToast, Toast, Image } from "@raycast/api";
+import { Grid, ActionPanel, Action, Icon, Color, LocalStorage, Form, useNavigation, showToast, Toast } from "@raycast/api";
+import SwitchAiModel from "./switch-ai-model";
 
 type IntegrationsState = {
   pipedrive: boolean;
@@ -12,6 +13,7 @@ type IntegrationsState = {
 export default function ConfigureIntegrations() {
   const { push } = useNavigation();
   const [status, setStatus] = useState<IntegrationsState>({ pipedrive: false, mantiks: false, flatchr: false, kalent: false, raycruiter: false });
+  const [hasWebhook, setHasWebhook] = useState(false);
 
   useEffect(() => {
     async function loadStatus() {
@@ -20,6 +22,8 @@ export default function ConfigureIntegrations() {
       const fl = await LocalStorage.getItem("FLATCHR_API_KEY");
       const kt = await LocalStorage.getItem("KALENT_API_KEY");
       const rc = await LocalStorage.getItem("RAYCRUITER_LICENSE_KEY");
+      const wh = await LocalStorage.getItem("custom_webhooks");
+
       setStatus({
         pipedrive: !!pd,
         mantiks: !!mk,
@@ -27,6 +31,7 @@ export default function ConfigureIntegrations() {
         kalent: !!kt,
         raycruiter: !!rc,
       });
+      setHasWebhook(!!wh);
     }
     loadStatus();
   }, []);
@@ -37,6 +42,32 @@ export default function ConfigureIntegrations() {
       columns={4}
       inset={Grid.Inset.Zero}
     >
+      <Grid.Section
+        title="Settings & Tools"
+        subtitle="Manage Models and Webhooks"
+      >
+        <Grid.Item
+          content={Icon.Stars}
+          title="AI Providers"
+          subtitle="Manage API Keys & Models"
+          actions={
+            <ActionPanel>
+              <Action title="Configure AI Models" onAction={() => push(<SwitchAiModel />)} />
+            </ActionPanel>
+          }
+        />
+        <Grid.Item
+          content={Icon.Link}
+          title="Custom Webhooks"
+          subtitle={hasWebhook ? "Active ✅" : "Not Configured"}
+          actions={
+            <ActionPanel>
+              <Action title="Configure Webhooks" onAction={() => push(<ConfigureWebhooks onSave={() => setHasWebhook(true)} />)} />
+            </ActionPanel>
+          }
+        />
+      </Grid.Section>
+
       <Grid.Section
         title="Connected Systems"
         subtitle="Click an integration to securely configure your API keys."
@@ -131,6 +162,51 @@ function ApiKeyForm({ tool, title, storageKey }: { tool: string; title: string; 
         placeholder={`Paste your ${tool} secret API token here...`}
       />
       <Form.Description text="Your API keys are stored entirely securely within Raycast's encrypted local keychain. They are never transmitted outside of direct requests to the SaaS providers." />
+    </Form>
+  );
+}
+
+function ConfigureWebhooks({ onSave }: { onSave: () => void }) {
+  const { pop } = useNavigation();
+  const [val, setVal] = useState("");
+
+  useEffect(() => {
+    LocalStorage.getItem<string>("custom_webhooks").then((v) => {
+      if (v) {
+        const parsed = JSON.parse(v);
+        setVal(parsed["all"] || "");
+      }
+    });
+  }, []);
+
+  async function handleSave() {
+    if (!val) {
+      await LocalStorage.removeItem("custom_webhooks");
+    } else {
+      await LocalStorage.setItem("custom_webhooks", JSON.stringify({ "all": val }));
+    }
+    await showToast({ style: Toast.Style.Success, title: "Webhooks Saved" });
+    onSave();
+    pop();
+  }
+
+  return (
+    <Form
+      navigationTitle="Configure Custom Webhook"
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Save Webhook" onSubmit={handleSave} />
+        </ActionPanel>
+      }
+    >
+      <Form.Description text="These Webhooks unlock the 'Premium' tier remote sync capability. If configured, actions will push payloads here instead of staying pure-local." />
+      <Form.TextField
+        id="webhookUrl"
+        title="Global Webhook URL"
+        value={val}
+        onChange={setVal}
+        placeholder="https://hooks.zapier.com/hooks/catch/..."
+      />
     </Form>
   );
 }

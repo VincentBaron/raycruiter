@@ -1,39 +1,36 @@
-import React, { useState } from "react";
-import { List, launchCommand, LaunchType, Icon, ActionPanel, Action } from "@raycast/api";
+import React from "react";
+import { List, ActionPanel, Action, Icon, useNavigation } from "@raycast/api";
 
-const COMMANDS = [
-  { name: "view-crm", title: "Deals", subtitle: "Manage deals pipeline", icon: "extension_logo.png" },
-  { name: "jobs", title: "Jobs", subtitle: "Browse vacancies", icon: "extension_logo.png" },
-  { name: "source-prospects", title: "Prospects", subtitle: "Manage sourced prospects", icon: "extension_logo.png" },
-  { name: "persons", title: "Persons", subtitle: "Manage CRM persons", icon: "extension_logo.png" },
-  { name: "power-dialer", title: "Power Dialer", subtitle: "Call and go through contacts quickly", icon: "extension_logo.png" },
-  { name: "view-candidates", title: "View Candidates", subtitle: "Browse ATS candidates", icon: "extension_logo.png" },
-  { name: "match-candidates", title: "Jemmo AI Matching", subtitle: "Rank candidates using Jemmo AI", icon: "extension_logo.png" },
-  { name: "top-talents", title: "Top Fresh Talents", subtitle: "High-signal talents & company sourcing", icon: "extension_logo.png" },
-  { name: "query-kalent", title: "Query Kalent", subtitle: "Search the Kalent Talents DB", icon: "extension_logo.png" },
-  { name: "search-databases", title: "Search Databases", subtitle: "View Deals, Prospects, and Organisations", icon: "extension_logo.png" },
-  { name: "configure-integrations", title: "Configure Integrations", subtitle: "Manage API keys & License", icon: Icon.Gear },
-  { name: "switch-ai-model", title: "Switch AI Model", subtitle: "Change Active Model", icon: "extension_logo.png" },
+import CrmView from "./view-crm";
+import JobsCommand from "./jobs";
+import SourceProspects from "./source-prospects";
+import Persons from "./persons";
+
+const HUB_COMMANDS = [
+  { id: "crm", title: "Deals Pipeline", subtitle: "Manage active CRM deals", icon: Icon.Box, component: <CrmView /> },
+  { id: "jobs", title: "Job Vacancies", subtitle: "Browse open jobs", icon: Icon.List, component: <JobsCommand /> },
+  { id: "prospects", title: "Prospects", subtitle: "Manage sourced prospects", icon: Icon.Person, component: <SourceProspects /> },
+  { id: "persons", title: "Persons Details", subtitle: "Search CRM persons natively", icon: Icon.MagnifyingGlass, component: <Persons /> },
 ];
 
 export default function RaycruiterMenu() {
+  const { push } = useNavigation();
+
   return (
-    <List navigationTitle="Raycruiter Menu" searchBarPlaceholder="Search Raycruiter Commands...">
-      <List.Section title="Raycruiter Tools">
-        {COMMANDS.map((cmd) => (
+    <List navigationTitle="Raycruiter Hub" searchBarPlaceholder="Search Deals, Jobs, or Prospects...">
+      <List.Section title="Raycruiter CRM Hub">
+        {HUB_COMMANDS.map((cmd) => (
           <List.Item
-            key={cmd.name}
+            key={cmd.id}
             icon={cmd.icon}
             title={cmd.title}
             subtitle={cmd.subtitle}
             actions={
               <ActionPanel>
                 <Action 
-                   title="Open Command" 
+                   title={`Open ${cmd.title}`} 
                    icon={Icon.ChevronRight} 
-                   onAction={async () => {
-                     await launchCommand({ name: cmd.name, type: LaunchType.UserInitiated });
-                   }} 
+                   onAction={() => push(cmd.component)} 
                 />
               </ActionPanel>
             }

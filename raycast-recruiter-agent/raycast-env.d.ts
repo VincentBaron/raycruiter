@@ -24,14 +24,6 @@ declare namespace Preferences {
   export type SearchDatabases = ExtensionPreferences & {}
   /** Preferences accessible in the `configure-integrations` command */
   export type ConfigureIntegrations = ExtensionPreferences & {}
-  /** Preferences accessible in the `view-crm` command */
-  export type ViewCrm = ExtensionPreferences & {}
-  /** Preferences accessible in the `jobs` command */
-  export type Jobs = ExtensionPreferences & {}
-  /** Preferences accessible in the `source-prospects` command */
-  export type SourceProspects = ExtensionPreferences & {}
-  /** Preferences accessible in the `persons` command */
-  export type Persons = ExtensionPreferences & {}
   /** Preferences accessible in the `view-candidates` command */
   export type ViewCandidates = ExtensionPreferences & {}
   /** Preferences accessible in the `match-candidates` command */
@@ -40,8 +32,6 @@ declare namespace Preferences {
   export type TopTalents = ExtensionPreferences & {}
   /** Preferences accessible in the `query-kalent` command */
   export type QueryKalent = ExtensionPreferences & {}
-  /** Preferences accessible in the `switch-ai-model` command */
-  export type SwitchAiModel = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -53,14 +43,6 @@ declare namespace Arguments {
   export type SearchDatabases = {}
   /** Arguments passed to the `configure-integrations` command */
   export type ConfigureIntegrations = {}
-  /** Arguments passed to the `view-crm` command */
-  export type ViewCrm = {}
-  /** Arguments passed to the `jobs` command */
-  export type Jobs = {}
-  /** Arguments passed to the `source-prospects` command */
-  export type SourceProspects = {}
-  /** Arguments passed to the `persons` command */
-  export type Persons = {}
   /** Arguments passed to the `view-candidates` command */
   export type ViewCandidates = {}
   /** Arguments passed to the `match-candidates` command */
@@ -69,7 +51,5 @@ declare namespace Arguments {
   export type TopTalents = {}
   /** Arguments passed to the `query-kalent` command */
   export type QueryKalent = {}
-  /** Arguments passed to the `switch-ai-model` command */
-  export type SwitchAiModel = {}
 }
 

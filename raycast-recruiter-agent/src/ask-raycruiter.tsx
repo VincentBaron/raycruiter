@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { List, ActionPanel, Action, Icon, showToast, Toast, Form, LocalStorage } from "@raycast/api";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { environment, List, ActionPanel, Action, Icon, showToast, Toast, Form, LocalStorage } from "@raycast/api";
+import { GoogleGenerativeAI, SchemaType, FunctionCall } from "@google/generative-ai";
+import fs from "fs";
+import path from "path";
 
 // Simulated Mantiks API response
 const mockMantiksLeadSearch = (query: string) => {
@@ -40,6 +42,7 @@ export default function Command() {
   const [searchText, setSearchText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sourcedLeads, setSourcedLeads] = useState<any[] | null>(null);
+  const [foundDeals, setFoundDeals] = useState<any[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -87,27 +90,122 @@ export default function Command() {
     setSearchText("");
     setIsLoading(true);
     setSourcedLeads(null); // clear previous leads
+    setFoundDeals(null); // clear previous deals
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
+      
+      const searchDealsTool: any = {
+        functionDeclarations: [
+          {
+            name: "search_deals",
+            description: "Search the local deals dataset for active pipelines, companies, and deals by name or keyword.",
+            parameters: {
+              type: SchemaType.OBJECT,
+              properties: {
+                keywords: {
+                  type: SchemaType.ARRAY,
+                  items: { type: SchemaType.STRING },
+                  description: "A list of specific companies, person names, or inferred tech industry names generated intelligently by you based on the user's intent to query the local ATS (e.g. ['tudigo', 'karmen', 'fintech', 'john']).",
+                },
+              },
+              required: ["keywords"],
+            },
+          },
+        ],
+      };
+
+      const model = genAI.getGenerativeModel({ 
         model: "gemini-2.5-flash",
-        systemInstruction: "You are an expert recruiter assistant. If the user asks you to 'source leads', 'find candidates', or implies searching for talent, respond strictly with 'FUNCTION_CALL: SOURCE_LEADS'. Otherwise, provide a helpful natural language response."
+        tools: [searchDealsTool],
+        systemInstruction: "You are an expert recruiter and pipeline manager. When asked about deals or companies, strictly call the 'search_deals' function to fetch real data from the local ATS. If the user asks for leads or sourcing, output 'FUNCTION_CALL: SOURCE_LEADS'. Always format output nicely using Markdown."
       });
 
-      const result = await model.generateContent(userQuery);
-      const responseText = result.response.text();
+      // Maintain chat history for function calling loop
+      const chat = model.startChat({
+        history: messages.map(m => ({
+          role: m.role === "ai" ? "model" : "user",
+          parts: [{ text: m.text }]
+        })).reverse() // Reverse to chronological order
+      });
+
+      const result = await chat.sendMessage(userQuery);
+      let response = result.response;
+
+      // Intercept Function Calls for Local RAG filtering
+      const calls = response.functionCalls ? response.functionCalls() : undefined;
+      if (calls && calls.length > 0) {
+        const call: FunctionCall = calls[0];
+        if (call.name === "search_deals") {
+          const rawKeywords = (call.args as any).keywords;
+          const keywords: string[] = Array.isArray(rawKeywords) ? rawKeywords.map(k => String(k).toLowerCase()) : [];
+          
+          const dealsPath = path.join(environment.assetsPath, "deals.json");
+          const dealsData = JSON.parse(fs.readFileSync(dealsPath, "utf-8"));
+
+          let matches = [];
+          
+          if (keywords.length === 0) {
+            // Default return for empty searches
+            matches = (dealsData as any[]).slice(0, 15);
+          } else {
+            matches = (dealsData as any[])
+              .filter((d) => {
+                const title = d.title?.toLowerCase() || "";
+                const website = d.website?.toLowerCase() || "";
+                const personName = d.person_id?.name?.toLowerCase() || "";
+                
+                // Match if ANY of the AI-provided keywords are found in the deal fields
+                return keywords.some(k => title.includes(k) || website.includes(k) || personName.includes(k));
+              })
+              .slice(0, 15); // Send max 15 to perfectly balance context vs memory
+          }
+          
+          setFoundDeals(matches);
+
+          // Send the specific JSON block back to the chat model
+          const functionResult = await chat.sendMessage([{
+            functionResponse: {
+              name: "search_deals",
+              response: { results: matches }
+            }
+          }]);
+          
+          response = functionResult.response;
+        }
+      }
+
+      const responseText = response.text();
 
       if (responseText.includes("FUNCTION_CALL: SOURCE_LEADS")) {
         // Trigger Mantiks API
-        const leads = mockMantiksLeadSearch(userQuery);
-        setSourcedLeads(leads);
-        setMessages((prev) => [
-          { role: "ai", text: `I fetched ${leads.length} leads for you via the Mantiks API. View them below!` },
-          ...prev,
-        ]);
+        setIsLoading(true);
+        setTimeout(() => {
+          const leads = mockMantiksLeadSearch(userQuery);
+          setSourcedLeads(leads);
+          setMessages((prev) => [{ role: "system", text: `(System) Successfully found ${leads.length} prospect(s) via Mantiks API.` }, ...prev]);
+          setIsLoading(false);
+        }, 1200);
       } else {
-        setMessages((prev) => [{ role: "ai", text: responseText }, ...prev]);
+        // Fake an LLM streaming typewriter effect
+        setMessages((prev) => [{ role: "ai", text: "" }, ...prev]);
+        
+        // Split text by words and whitespaces to animate token chunks
+        const tokens = responseText.match(/(\S+|\s+)/g) || [responseText];
+        let currentText = "";
+        
+        for (let i = 0; i < tokens.length; i++) {
+          currentText += tokens[i];
+          // Use a functional state update to safely replace the top message's text
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[0] = { ...newMessages[0], text: currentText };
+            return newMessages;
+          });
+          // Artificial delay block (faster on whitespaces, slightly randomized word latency)
+          const delayMs = tokens[i].trim().length === 0 ? 5 : Math.floor(Math.random() * 25) + 15;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
       }
     } catch (error: any) {
       console.error("🔍 Gemini API Error Details:", error);
@@ -125,11 +223,11 @@ export default function Command() {
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder="Ask Raycruiter: 'Source leads for Engineers...'"
+      searchBarPlaceholder="Ask Raycruiter: 'Get deals in fintech...'"
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Ask Raycruiter"
-      isShowingDetail={sourcedLeads !== null}
+      isShowingDetail={(sourcedLeads !== null && sourcedLeads.length > 0) || (foundDeals !== null && foundDeals.length > 0)}
     >
       {searchText.length > 0 && (
         <List.Item
@@ -141,6 +239,46 @@ export default function Command() {
             </ActionPanel>
           }
         />
+      )}
+
+      {/* RENDER NLP RETRIEVED ATS DEALS */}
+      {foundDeals && foundDeals.length > 0 && (
+        <List.Section title="Local ATS Deals">
+          {foundDeals.map((deal) => (
+            <List.Item
+              key={deal.id}
+              title={deal.title || "Unknown Deal"}
+              subtitle={deal.status ? `Status: ${deal.status}` : undefined}
+              icon={Icon.Folder}
+              detail={
+                <List.Item.Detail
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label title="Deal Name" text={deal.title || "Unknown"} />
+                      <List.Item.Detail.Metadata.Label title="Deal ID" text={deal.id?.toString() || ""} />
+                      {deal.website && <List.Item.Detail.Metadata.Link title="Website" target={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} text={deal.website} />}
+                      <List.Item.Detail.Metadata.Separator />
+                      <List.Item.Detail.Metadata.Label title="Primary Contact" text={deal.person_id?.name || "N/A"} icon={Icon.Person} />
+                      {deal.person_id?.email?.[0]?.value && (
+                        <List.Item.Detail.Metadata.Label title="Email" text={deal.person_id.email[0].value} icon={Icon.Envelope} />
+                      )}
+                      {deal.person_id?.phone?.[0]?.value && (
+                        <List.Item.Detail.Metadata.Label title="Phone" text={deal.person_id.phone[0].value} icon={Icon.Phone} />
+                      )}
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
+              actions={
+                <ActionPanel>
+                  {deal.website && <Action.OpenInBrowser title="Open Website" url={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} />}
+                  {deal.person_id?.email?.[0]?.value && <Action.CopyToClipboard title="Copy Email" content={deal.person_id.email[0].value} />}
+                  {deal.person_id?.phone?.[0]?.value && <Action.CopyToClipboard title="Copy Phone" content={deal.person_id.phone[0].value} />}
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
       )}
 
       {/* RENDER SOURCED LEADS (POWER DIAL VIEW) */}

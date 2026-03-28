@@ -1,5 +1,14 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { List, ActionPanel, Action, Icon, Color, LocalStorage, showToast, Toast } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Color,
+  LocalStorage,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import fs from "fs";
 import path from "path";
 import { DealDetail } from "./deal-components";
@@ -24,8 +33,15 @@ export default function CrmView() {
   const [searchText, setSearchText] = useState("");
   const [selectedPipeline, setSelectedPipeline] = useState<string>("all");
   const [diffused, setDiffused] = useState<Record<string, boolean>>({});
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const dealsData = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {},
+  );
+  const dealsData = JSON.parse(
+    fs.readFileSync(
+      "/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json",
+      "utf8",
+    ),
+  );
 
   useEffect(() => {
     async function load() {
@@ -52,13 +68,19 @@ export default function CrmView() {
   }
 
   const dealsWithIds = useMemo(() => {
-    return dealsData.map((d: any, i: number) => ({ ...d, shortId: `d${i + 1}` }));
+    return dealsData.map((d: any, i: number) => ({
+      ...d,
+      shortId: `d${i + 1}`,
+    }));
   }, []);
 
   const filteredDeals = useMemo(() => {
     return dealsWithIds.filter((deal: any) => {
       // Filter by pipeline
-      if (selectedPipeline !== "all" && deal.pipeline_id?.toString() !== selectedPipeline) {
+      if (
+        selectedPipeline !== "all" &&
+        deal.pipeline_id?.toString() !== selectedPipeline
+      ) {
         return false;
       }
 
@@ -91,18 +113,40 @@ export default function CrmView() {
       searchBarPlaceholder="Search pipeline deals..."
       onSearchTextChange={setSearchText}
       searchBarAccessory={
-        <List.Dropdown tooltip="Select Deals Pipeline" value={selectedPipeline} onChange={setSelectedPipeline}>
-          <List.Dropdown.Item title="All Deals Pipelines" value="all" icon={Icon.List} />
-          <List.Dropdown.Item title="Engineering Search" value="1" icon={Icon.Terminal} />
-          <List.Dropdown.Item title="Executive Placement" value="2" icon={Icon.Person} />
-          <List.Dropdown.Item title="Graduate Pipeline" value="3" icon={Icon.Book} />
+        <List.Dropdown
+          tooltip="Select Deals Pipeline"
+          value={selectedPipeline}
+          onChange={setSelectedPipeline}
+        >
+          <List.Dropdown.Item
+            title="All Deals Pipelines"
+            value="all"
+            icon={Icon.List}
+          />
+          <List.Dropdown.Item
+            title="Engineering Search"
+            value="1"
+            icon={Icon.Terminal}
+          />
+          <List.Dropdown.Item
+            title="Executive Placement"
+            value="2"
+            icon={Icon.Person}
+          />
+          <List.Dropdown.Item
+            title="Graduate Pipeline"
+            value="3"
+            icon={Icon.Book}
+          />
         </List.Dropdown>
       }
     >
       {sortedGroupKeys.map((groupKey) => {
         const dealsInGroup = groupedDeals[groupKey];
         const isExpanded = expandedGroups[groupKey];
-        const displayedDeals = isExpanded ? dealsInGroup : dealsInGroup.slice(0, 3);
+        const displayedDeals = isExpanded
+          ? dealsInGroup
+          : dealsInGroup.slice(0, 3);
         const hasMore = dealsInGroup.length > 3;
 
         return (
@@ -117,7 +161,10 @@ export default function CrmView() {
               const accessories: List.Item.Accessory[] = [];
 
               if (diffused[deal.id]) {
-                accessories.push({ text: "Diffused", icon: { source: Icon.Megaphone, tintColor: Color.Green } });
+                accessories.push({
+                  text: "Diffused",
+                  icon: { source: Icon.Megaphone, tintColor: Color.Green },
+                });
               }
 
               if (deal.next_activity_date) {
@@ -150,21 +197,28 @@ export default function CrmView() {
                 accessories.push({
                   text: text,
                   icon: { source: icon, tintColor: color },
-                  tooltip: `Next Activity: ${activityDate.toLocaleDateString()}`
+                  tooltip: `Next Activity: ${activityDate.toLocaleDateString()}`,
                 });
               } else {
                 accessories.push({
                   text: "No Activity",
-                  icon: { source: Icon.MinusCircle, tintColor: Color.SecondaryText }
+                  icon: {
+                    source: Icon.MinusCircle,
+                    tintColor: Color.SecondaryText,
+                  },
                 });
               }
 
-              accessories.push(
-                { text: `€${deal.value || 0}`, icon: Icon.Coins }
-              );
+              accessories.push({
+                text: `€${deal.value || 0}`,
+                icon: Icon.Coins,
+              });
 
               if (deal.linkedin) {
-                accessories.unshift({ icon: Icon.Link, tooltip: deal.linkedin });
+                accessories.unshift({
+                  icon: Icon.Link,
+                  tooltip: deal.linkedin,
+                });
               }
 
               return (
@@ -179,12 +233,26 @@ export default function CrmView() {
                       <Action.Push
                         title="View Full Deal Details"
                         icon={Icon.Eye}
-                        target={<DealDetail deal={deal} isDiffused={diffused[deal.id]} onToggleDiffused={() => toggleDiffused(deal.id)} />}
+                        target={
+                          <DealDetail
+                            deal={deal}
+                            isDiffused={diffused[deal.id]}
+                            onToggleDiffused={() => toggleDiffused(deal.id)}
+                          />
+                        }
                       />
                       <ActionPanel.Section title="Accelerators">
                         <Action
-                          title={diffused[deal.id] ? "Mark as Not Diffused" : "Mark as Diffused"}
-                          icon={diffused[deal.id] ? Icon.XmarkCircle : Icon.Megaphone}
+                          title={
+                            diffused[deal.id]
+                              ? "Mark as Not Diffused"
+                              : "Mark as Diffused"
+                          }
+                          icon={
+                            diffused[deal.id]
+                              ? Icon.XmarkCircle
+                              : Icon.Megaphone
+                          }
                           onAction={() => toggleDiffused(deal.id)}
                           shortcut={{ modifiers: ["cmd"], key: "d" }}
                         />
@@ -197,7 +265,9 @@ export default function CrmView() {
                         <Action.Push
                           title="Transfer to ATS (Create Job)"
                           icon={Icon.List}
-                          target={<CreateJobFromDeal defaultDealName={deal.title} />}
+                          target={
+                            <CreateJobFromDeal defaultDealName={deal.title} />
+                          }
                           shortcut={{ modifiers: ["cmd"], key: "t" }}
                         />
                       </ActionPanel.Section>
@@ -212,7 +282,11 @@ export default function CrmView() {
                         {deal.website && (
                           <Action.OpenInBrowser
                             title="Open Website"
-                            url={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`}
+                            url={
+                              deal.website.startsWith("http")
+                                ? deal.website
+                                : `https://${deal.website}`
+                            }
                           />
                         )}
                       </ActionPanel.Section>
@@ -238,7 +312,12 @@ export default function CrmView() {
                     <Action
                       title="Expand Pipeline"
                       icon={Icon.ArrowsExpand}
-                      onAction={() => setExpandedGroups({ ...expandedGroups, [groupKey]: true })}
+                      onAction={() =>
+                        setExpandedGroups({
+                          ...expandedGroups,
+                          [groupKey]: true,
+                        })
+                      }
                       shortcut={{ modifiers: ["cmd"], key: "e" }}
                     />
                   </ActionPanel>
@@ -255,7 +334,12 @@ export default function CrmView() {
                     <Action
                       title="Collapse Pipeline"
                       icon={Icon.ArrowsExpand}
-                      onAction={() => setExpandedGroups({ ...expandedGroups, [groupKey]: false })}
+                      onAction={() =>
+                        setExpandedGroups({
+                          ...expandedGroups,
+                          [groupKey]: false,
+                        })
+                      }
                       shortcut={{ modifiers: ["cmd"], key: "e" }}
                     />
                   </ActionPanel>

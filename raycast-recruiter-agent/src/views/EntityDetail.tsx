@@ -1,6 +1,6 @@
 import { Detail, ActionPanel, Action } from "@raycast/api";
 
-export function EntityDetail({ type, data }: { type: string, data: any }) {
+export function EntityDetail({ type, data }: { type: string; data: any }) {
   const title = data.name || data.title;
   let markdown = `# ${title}\n\n`;
 
@@ -20,14 +20,26 @@ export function EntityDetail({ type, data }: { type: string, data: any }) {
       metadata={
         <Detail.Metadata>
           <Detail.Metadata.Label title="Type" text={type} />
-          {data.status && <Detail.Metadata.Label title="Status" text={data.status} />}
-          {data.score && <Detail.Metadata.Label title="Score" text={String(data.score)} />}
+          {data.status && (
+            <Detail.Metadata.Label title="Status" text={data.status} />
+          )}
+          {data.score && (
+            <Detail.Metadata.Label title="Score" text={String(data.score)} />
+          )}
         </Detail.Metadata>
       }
       actions={
         <ActionPanel>
-           <Action.OpenInBrowser title="Open in Application" url={`https://your-ats-app.com/${type.toLowerCase()}/${data.id}`} shortcut={{ modifiers: [], key: "enter" }} />
-           <Action.CopyToClipboard title="Copy ID" content={data.id} shortcut={{ modifiers: ["cmd", "shift"], key: "c" }} />
+          <Action.OpenInBrowser
+            title="Open in Application"
+            url={`https://your-ats-app.com/${type.toLowerCase()}/${data.id}`}
+            shortcut={{ modifiers: [], key: "enter" }}
+          />
+          <Action.CopyToClipboard
+            title="Copy ID"
+            content={data.id}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+          />
         </ActionPanel>
       }
     />

@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Grid, ActionPanel, Action, Icon, Color, LocalStorage, Form, useNavigation, showToast, Toast } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Color,
+  LocalStorage,
+  Form,
+  useNavigation,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import SwitchAiModel from "./switch-ai-model";
 
 type IntegrationsState = {
@@ -12,7 +23,13 @@ type IntegrationsState = {
 
 export default function ConfigureIntegrations() {
   const { push } = useNavigation();
-  const [status, setStatus] = useState<IntegrationsState>({ pipedrive: false, mantiks: false, flatchr: false, kalent: false, raycruiter: false });
+  const [status, setStatus] = useState<IntegrationsState>({
+    pipedrive: false,
+    mantiks: false,
+    flatchr: false,
+    kalent: false,
+    raycruiter: false,
+  });
   const [hasWebhook, setHasWebhook] = useState(false);
 
   useEffect(() => {
@@ -37,97 +54,164 @@ export default function ConfigureIntegrations() {
   }, []);
 
   return (
-    <Grid
-      navigationTitle="Integrations Hub"
-      columns={4}
-      inset={Grid.Inset.Zero}
-    >
-      <Grid.Section
+    <List navigationTitle="Integrations Hub">
+      <List.Section
         title="Settings & Tools"
         subtitle="Manage Models and Webhooks"
       >
-        <Grid.Item
-          content={Icon.Stars}
+        <List.Item
+          icon={Icon.Stars}
           title="AI Providers"
           subtitle="Manage API Keys & Models"
           actions={
             <ActionPanel>
-              <Action title="Configure AI Models" onAction={() => push(<SwitchAiModel />)} />
+              <Action
+                title="Configure AI Models"
+                onAction={() => push(<SwitchAiModel />)}
+              />
             </ActionPanel>
           }
         />
-        <Grid.Item
-          content={Icon.Link}
+        <List.Item
+          icon={Icon.Link}
           title="Custom Webhooks"
           subtitle={hasWebhook ? "Active ✅" : "Not Configured"}
           actions={
             <ActionPanel>
-              <Action title="Configure Webhooks" onAction={() => push(<ConfigureWebhooks onSave={() => setHasWebhook(true)} />)} />
+              <Action
+                title="Configure Webhooks"
+                onAction={() =>
+                  push(<ConfigureWebhooks onSave={() => setHasWebhook(true)} />)
+                }
+              />
             </ActionPanel>
           }
         />
-      </Grid.Section>
+      </List.Section>
 
-      <Grid.Section
+      <List.Section
         title="Connected Systems"
         subtitle="Click an integration to securely configure your API keys."
       >
-        <Grid.Item
-          content="extension_logo.png"
+        <List.Item
+          icon="extension_logo.png"
           title="Raycruiter Pro"
           subtitle={status.raycruiter ? "License Active ✅" : "Unlock Needed"}
           actions={
             <ActionPanel>
-              <Action title="Enter Premium License Key" onAction={() => push(<ApiKeyForm tool="Raycruiter" title="Raycruiter License Key" storageKey="RAYCRUITER_LICENSE_KEY" />)} />
+              <Action
+                title="Enter Premium License Key"
+                onAction={() =>
+                  push(
+                    <ApiKeyForm
+                      tool="Raycruiter"
+                      title="Raycruiter License Key"
+                      storageKey="RAYCRUITER_LICENSE_KEY"
+                    />,
+                  )
+                }
+              />
             </ActionPanel>
           }
         />
-        <Grid.Item
-          content="pipedrive.png"
+        <List.Item
+          icon="pipedrive.png"
           title="Pipedrive (CRM)"
           subtitle={status.pipedrive ? "Connected ✅" : "Not Configured"}
           actions={
             <ActionPanel>
-              <Action title="Configure Pipedrive" onAction={() => push(<ApiKeyForm tool="pipedrive" title="Pipedrive API Key" storageKey="PIPEDRIVE_API_KEY" />)} />
+              <Action
+                title="Configure Pipedrive"
+                onAction={() =>
+                  push(
+                    <ApiKeyForm
+                      tool="pipedrive"
+                      title="Pipedrive API Key"
+                      storageKey="PIPEDRIVE_API_KEY"
+                    />,
+                  )
+                }
+              />
             </ActionPanel>
           }
         />
-        <Grid.Item
-          content="mantiks.jpeg"
+        <List.Item
+          icon="mantiks.jpeg"
           title="Mantiks (Sourcing Prospects)"
           subtitle={status.mantiks ? "Connected ✅" : "Not Configured"}
           actions={
             <ActionPanel>
-              <Action title="Configure Mantiks" onAction={() => push(<ApiKeyForm tool="mantiks" title="Mantiks API Key" storageKey="MANTIKS_API_KEY" />)} />
+              <Action
+                title="Configure Mantiks"
+                onAction={() =>
+                  push(
+                    <ApiKeyForm
+                      tool="mantiks"
+                      title="Mantiks API Key"
+                      storageKey="MANTIKS_API_KEY"
+                    />,
+                  )
+                }
+              />
             </ActionPanel>
           }
         />
-        <Grid.Item
-          content="flatchr_logo.jpeg"
+        <List.Item
+          icon="flatchr_logo.jpeg"
           title="Flatchr (ATS)"
           subtitle={status.flatchr ? "Connected ✅" : "Not Configured"}
           actions={
             <ActionPanel>
-              <Action title="Configure Flatchr" onAction={() => push(<ApiKeyForm tool="flatchr" title="Flatchr API Key" storageKey="FLATCHR_API_KEY" />)} />
+              <Action
+                title="Configure Flatchr"
+                onAction={() =>
+                  push(
+                    <ApiKeyForm
+                      tool="flatchr"
+                      title="Flatchr API Key"
+                      storageKey="FLATCHR_API_KEY"
+                    />,
+                  )
+                }
+              />
             </ActionPanel>
           }
         />
-        <Grid.Item
-          content="kalent.jpeg"
+        <List.Item
+          icon="kalent.jpeg"
           title="Kalent (MCP Server)"
           subtitle={status.kalent ? "Connected ✅" : "Not Configured"}
           actions={
             <ActionPanel>
-              <Action title="Configure Kalent" onAction={() => push(<ApiKeyForm tool="kalent" title="Kalent API Key" storageKey="KALENT_API_KEY" />)} />
+              <Action
+                title="Configure Kalent"
+                onAction={() =>
+                  push(
+                    <ApiKeyForm
+                      tool="kalent"
+                      title="Kalent API Key"
+                      storageKey="KALENT_API_KEY"
+                    />,
+                  )
+                }
+              />
             </ActionPanel>
           }
         />
-      </Grid.Section>
-    </Grid>
+      </List.Section>
+    </List>
   );
 }
 
-function ApiKeyForm({ tool, title, storageKey }: { tool: string; title: string; storageKey: string }) {
+function ApiKeyForm({
+  tool,
+  title,
+  storageKey,
+}: {
+  tool: string;
+  title: string;
+  storageKey: string;
+}) {
   const { pop } = useNavigation();
   const [val, setVal] = useState("");
 
@@ -141,7 +225,11 @@ function ApiKeyForm({ tool, title, storageKey }: { tool: string; title: string; 
     } else {
       await LocalStorage.setItem(storageKey, val);
     }
-    await showToast({ style: Toast.Style.Success, title: "Configuration Saved", message: `${tool} integration updated.` });
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Configuration Saved",
+      message: `${tool} integration updated.`,
+    });
     pop();
   }
 
@@ -183,7 +271,10 @@ function ConfigureWebhooks({ onSave }: { onSave: () => void }) {
     if (!val) {
       await LocalStorage.removeItem("custom_webhooks");
     } else {
-      await LocalStorage.setItem("custom_webhooks", JSON.stringify({ "all": val }));
+      await LocalStorage.setItem(
+        "custom_webhooks",
+        JSON.stringify({ all: val }),
+      );
     }
     await showToast({ style: Toast.Style.Success, title: "Webhooks Saved" });
     onSave();

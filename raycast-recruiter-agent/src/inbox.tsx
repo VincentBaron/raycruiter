@@ -8,10 +8,22 @@ export default function Command() {
   const [searchText, setSearchText] = useState("");
 
   const allItems = [
-    ...deals.map(d => ({ type: "Deal", data: d, score: d.status === "open" ? 3 : 1 })),
-    ...jobs.map(j => ({ type: "Job", data: j, score: j.status === "open" ? 2 : 1 })),
-    ...prospects.map(p => ({ type: "Prospect", data: p, score: p.signalStrength === "high" ? 3 : 2 })),
-    ...candidates.map(c => ({ type: "Candidate", data: c, score: 3 }))
+    ...deals.map((d) => ({
+      type: "Deal",
+      data: d,
+      score: d.status === "open" ? 3 : 1,
+    })),
+    ...jobs.map((j) => ({
+      type: "Job",
+      data: j,
+      score: j.status === "open" ? 2 : 1,
+    })),
+    ...prospects.map((p) => ({
+      type: "Prospect",
+      data: p,
+      score: p.signalStrength === "high" ? 3 : 2,
+    })),
+    ...candidates.map((c) => ({ type: "Candidate", data: c, score: 3 })),
   ].sort((a, b) => {
     const dueA = a.data.dueDate || getFakeDueDateOffset(a.data.id);
     const dueB = b.data.dueDate || getFakeDueDateOffset(b.data.id);
@@ -26,14 +38,18 @@ export default function Command() {
   });
 
   return (
-    <List 
-      searchBarPlaceholder="Filter specific items in Inbox..." 
+    <List
+      searchBarPlaceholder="Filter specific items in Inbox..."
       navigationTitle="Inbox"
       onSearchTextChange={setSearchText}
     >
       <List.Section title="Priorities & Outstanding Actions">
         {filteredItems.map((item, idx) => (
-          <EntityListItem key={`${item.type}-${item.data.id}-${idx}`} type={item.type as any} data={item.data} />
+          <EntityListItem
+            key={`${item.type}-${item.data.id}-${idx}`}
+            type={item.type as any}
+            data={item.data}
+          />
         ))}
       </List.Section>
     </List>

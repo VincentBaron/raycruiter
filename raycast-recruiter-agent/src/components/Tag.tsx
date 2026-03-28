@@ -1,6 +1,10 @@
 import { Color, List } from "@raycast/api";
 
-export function EntityTag({ type }: { type: "Deal" | "Job" | "Prospect" | "Candidate" | "Client" }) {
+export function EntityTag({
+  type,
+}: {
+  type: "Deal" | "Job" | "Prospect" | "Candidate" | "Client";
+}) {
   let color = Color.SecondaryText;
   switch (type) {
     case "Client":

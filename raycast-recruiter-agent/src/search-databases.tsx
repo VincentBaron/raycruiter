@@ -11,12 +11,12 @@ export default function Command() {
   };
 
   return (
-    <EntityList 
-      isLoading={false} 
-      deals={[...deals].sort(sortByDueDate)} 
-      jobs={[...jobs].sort(sortByDueDate)} 
-      prospects={[...prospects].sort(sortByDueDate)} 
-      candidates={[...candidates].sort(sortByDueDate)} 
+    <EntityList
+      isLoading={false}
+      deals={[...deals].sort(sortByDueDate)}
+      jobs={[...jobs].sort(sortByDueDate)}
+      prospects={[...prospects].sort(sortByDueDate)}
+      candidates={[...candidates].sort(sortByDueDate)}
       navigationTitle="Global Search"
     />
   );

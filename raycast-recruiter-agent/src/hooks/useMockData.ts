@@ -9,10 +9,25 @@ import initialCandidates from "../data/mockCandidates.json";
 export function useMockData() {
   const [deals, setDeals] = useCachedState<any[]>("mockDeals", initialDeals);
   const [jobs, setJobs] = useCachedState<any[]>("mockJobs", initialJobs);
-  const [prospects, setProspects] = useCachedState<any[]>("mockProspects", initialProspects);
-  const [candidates, setCandidates] = useCachedState<any[]>("mockCandidates", initialCandidates);
+  const [prospects, setProspects] = useCachedState<any[]>(
+    "mockProspects",
+    initialProspects,
+  );
+  const [candidates, setCandidates] = useCachedState<any[]>(
+    "mockCandidates",
+    initialCandidates,
+  );
 
-  return { deals, setDeals, jobs, setJobs, prospects, setProspects, candidates, setCandidates };
+  return {
+    deals,
+    setDeals,
+    jobs,
+    setJobs,
+    prospects,
+    setProspects,
+    candidates,
+    setCandidates,
+  };
 }
 
 // Simulated stable dummy offset for mock data visualization

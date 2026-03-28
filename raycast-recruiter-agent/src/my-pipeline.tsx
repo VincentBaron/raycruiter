@@ -10,16 +10,18 @@ export default function Command() {
     return dueA - dueB;
   };
 
-  const activeDeals = deals.filter((d: any) => d.assignee === "Jane Doe").sort(sortByDueDate);
+  const activeDeals = deals
+    .filter((d: any) => d.assignee === "Jane Doe")
+    .sort(sortByDueDate);
   const activeProspects = prospects.sort(sortByDueDate); // Assuming all are in Jane's pipeline
 
   return (
-    <EntityList 
-      isLoading={false} 
-      deals={activeDeals} 
-      jobs={[]} 
-      prospects={activeProspects} 
-      candidates={[]} 
+    <EntityList
+      isLoading={false}
+      deals={activeDeals}
+      jobs={[]}
+      prospects={activeProspects}
+      candidates={[]}
       navigationTitle="My Pipeline"
     />
   );

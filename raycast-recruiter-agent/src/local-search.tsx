@@ -1,11 +1,28 @@
 import React, { useState, useMemo } from "react";
-import { List, Icon, Color, ActionPanel, Action, useNavigation } from "@raycast/api";
+import {
+  List,
+  Icon,
+  Color,
+  ActionPanel,
+  Action,
+  useNavigation,
+} from "@raycast/api";
 
 import fs from "fs";
 import path from "path";
 
-const rawDeals = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json", "utf8"));
-const rawMantiksPayload = JSON.parse(fs.readFileSync("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/mantiks_payload.json", "utf8"));
+const rawDeals = JSON.parse(
+  fs.readFileSync(
+    "/Users/vincentbaron/raycruiter/raycast-recruiter-agent/src/deals.json",
+    "utf8",
+  ),
+);
+const rawMantiksPayload = JSON.parse(
+  fs.readFileSync(
+    "/Users/vincentbaron/raycruiter/raycast-recruiter-agent/mantiks_payload.json",
+    "utf8",
+  ),
+);
 
 interface Deal {
   id: string;
@@ -52,7 +69,9 @@ interface Organisation {
 
 export default function SearchDatabases() {
   const [searchText, setSearchText] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "deals" | "prospects" | "organisations">("all");
+  const [filterType, setFilterType] = useState<
+    "all" | "deals" | "prospects" | "organisations"
+  >("all");
 
   const deals = rawDeals as Deal[];
   const leads = rawMantiksPayload.leads as MantiksLead[];
@@ -62,7 +81,7 @@ export default function SearchDatabases() {
     const orgMap = new Map<string, Organisation>();
 
     // From Mantiks
-    leads.forEach(lead => {
+    leads.forEach((lead) => {
       const name = lead.company_name?.trim();
       if (name && !orgMap.has(name.toLowerCase())) {
         orgMap.set(name.toLowerCase(), {
@@ -73,13 +92,13 @@ export default function SearchDatabases() {
           source: "mantiks",
           sector: lead.company_sectors,
           location: lead.hq_location,
-          size: lead.company_size
+          size: lead.company_size,
         });
       }
     });
 
     // From Deals
-    deals.forEach(deal => {
+    deals.forEach((deal) => {
       let name = deal.title.replace(/^Affaire\s+/i, "").trim();
       if (name && !orgMap.has(name.toLowerCase())) {
         orgMap.set(name.toLowerCase(), {
@@ -87,7 +106,7 @@ export default function SearchDatabases() {
           name: name,
           website: deal.website || undefined,
           linkedin: deal.linkedin || undefined,
-          source: "deal"
+          source: "deal",
         });
       }
     });
@@ -100,22 +119,32 @@ export default function SearchDatabases() {
   const filterItem = (textStr: string) => {
     if (searchWords.length === 0) return true;
     const lower = textStr.toLowerCase();
-    return searchWords.every(word => lower.includes(word));
+    return searchWords.every((word) => lower.includes(word));
   };
 
   const filteredDeals = useMemo(() => {
     if (filterType !== "all" && filterType !== "deals") return [];
-    return deals.filter(d => filterItem(`${d.id} ${d.title} ${d.website || ""} ${d.person_id?.name || ""}`));
+    return deals.filter((d) =>
+      filterItem(
+        `${d.id} ${d.title} ${d.website || ""} ${d.person_id?.name || ""}`,
+      ),
+    );
   }, [deals, filterType, searchWords]);
 
   const filteredLeads = useMemo(() => {
     if (filterType !== "all" && filterType !== "prospects") return [];
-    return leads.filter(l => filterItem(`${l.company_name} ${l.lead_first_name} ${l.lead_last_name} ${l.lead_email} ${l.lead_job_title}`));
+    return leads.filter((l) =>
+      filterItem(
+        `${l.company_name} ${l.lead_first_name} ${l.lead_last_name} ${l.lead_email} ${l.lead_job_title}`,
+      ),
+    );
   }, [leads, filterType, searchWords]);
 
   const filteredOrgs = useMemo(() => {
     if (filterType !== "all" && filterType !== "organisations") return [];
-    return organisations.filter(o => filterItem(`${o.id} ${o.name} ${o.website || ""} ${o.sector || ""}`));
+    return organisations.filter((o) =>
+      filterItem(`${o.id} ${o.name} ${o.website || ""} ${o.sector || ""}`),
+    );
   }, [organisations, filterType, searchWords]);
 
   return (
@@ -124,7 +153,11 @@ export default function SearchDatabases() {
       searchBarPlaceholder="Search directly by keywords, ids, emails..."
       onSearchTextChange={setSearchText}
       searchBarAccessory={
-        <List.Dropdown tooltip="Filter Database" onChange={(id) => setFilterType(id as any)} defaultValue="all">
+        <List.Dropdown
+          tooltip="Filter Database"
+          onChange={(id) => setFilterType(id as any)}
+          defaultValue="all"
+        >
           <List.Dropdown.Item title="All Databases" value="all" />
           <List.Dropdown.Item title="Organisations" value="organisations" />
           <List.Dropdown.Item title="Deals" value="deals" />
@@ -135,28 +168,67 @@ export default function SearchDatabases() {
     >
       {(filterType === "all" || filterType === "organisations") && (
         <List.Section title={`Organisations (${filteredOrgs.length})`}>
-          {filteredOrgs.map(org => (
+          {filteredOrgs.map((org) => (
             <List.Item
               key={`org-${org.id}`}
               icon={{ source: Icon.Building, tintColor: Color.Purple }}
               title={org.name}
-              subtitle={filterType === "organisations" ? "" : org.website || org.sector}
-              accessories={filterType === "organisations" ? [] : [{ text: "Organisation" }]}
+              subtitle={
+                filterType === "organisations" ? "" : org.website || org.sector
+              }
+              accessories={
+                filterType === "organisations" ? [] : [{ text: "Organisation" }]
+              }
               detail={
                 <List.Item.Detail
                   metadata={
                     <List.Item.Detail.Metadata>
-                      <List.Item.Detail.Metadata.Label title="Name" text={org.name} />
-                      <List.Item.Detail.Metadata.Label title="ID" text={org.id} />
-                      {org.website && <List.Item.Detail.Metadata.Link title="Website" target={org.website} text={org.website} />}
-                      {org.linkedin && <List.Item.Detail.Metadata.Link title="LinkedIn" target={org.linkedin} text={org.linkedin} />}
-                      {org.sector && <List.Item.Detail.Metadata.Label title="Sector" text={org.sector} />}
-                      {org.size && <List.Item.Detail.Metadata.Label title="Size" text={org.size} />}
-                      {org.location && <List.Item.Detail.Metadata.Label title="HQ Location" text={org.location} />}
+                      <List.Item.Detail.Metadata.Label
+                        title="Name"
+                        text={org.name}
+                      />
+                      <List.Item.Detail.Metadata.Label
+                        title="ID"
+                        text={org.id}
+                      />
+                      {org.website && (
+                        <List.Item.Detail.Metadata.Link
+                          title="Website"
+                          target={org.website}
+                          text={org.website}
+                        />
+                      )}
+                      {org.linkedin && (
+                        <List.Item.Detail.Metadata.Link
+                          title="LinkedIn"
+                          target={org.linkedin}
+                          text={org.linkedin}
+                        />
+                      )}
+                      {org.sector && (
+                        <List.Item.Detail.Metadata.Label
+                          title="Sector"
+                          text={org.sector}
+                        />
+                      )}
+                      {org.size && (
+                        <List.Item.Detail.Metadata.Label
+                          title="Size"
+                          text={org.size}
+                        />
+                      )}
+                      {org.location && (
+                        <List.Item.Detail.Metadata.Label
+                          title="HQ Location"
+                          text={org.location}
+                        />
+                      )}
                       <List.Item.Detail.Metadata.TagList title="Source">
                         <List.Item.Detail.Metadata.TagList.Item
                           text={org.source.toUpperCase()}
-                          color={org.source === "mantiks" ? Color.Blue : Color.Green}
+                          color={
+                            org.source === "mantiks" ? Color.Blue : Color.Green
+                          }
                         />
                       </List.Item.Detail.Metadata.TagList>
                     </List.Item.Detail.Metadata>
@@ -165,9 +237,26 @@ export default function SearchDatabases() {
               }
               actions={
                 <ActionPanel>
-                  {org.website && <Action.OpenInBrowser title="Open Website" url={org.website.startsWith('http') ? org.website : `https://${org.website}`} />}
-                  {org.linkedin && <Action.OpenInBrowser title="Open LinkedIn" url={org.linkedin} />}
-                  <Action.CopyToClipboard title="Copy Organisation Name" content={org.name} />
+                  {org.website && (
+                    <Action.OpenInBrowser
+                      title="Open Website"
+                      url={
+                        org.website.startsWith("http")
+                          ? org.website
+                          : `https://${org.website}`
+                      }
+                    />
+                  )}
+                  {org.linkedin && (
+                    <Action.OpenInBrowser
+                      title="Open LinkedIn"
+                      url={org.linkedin}
+                    />
+                  )}
+                  <Action.CopyToClipboard
+                    title="Copy Organisation Name"
+                    content={org.name}
+                  />
                 </ActionPanel>
               }
             />
@@ -177,7 +266,7 @@ export default function SearchDatabases() {
 
       {(filterType === "all" || filterType === "deals") && (
         <List.Section title={`Deals (${filteredDeals.length})`}>
-          {filteredDeals.map(deal => (
+          {filteredDeals.map((deal) => (
             <List.Item
               key={`deal-${deal.id}`}
               icon={{ source: Icon.BankNote, tintColor: Color.Green }}
@@ -185,13 +274,30 @@ export default function SearchDatabases() {
               subtitle={deal.person_id?.name || deal.website || ""}
               accessories={[
                 { text: `ID: ${deal.id}`, icon: Icon.Hashtag },
-                { text: "Deal" }
+                { text: "Deal" },
               ]}
               actions={
                 <ActionPanel>
-                  <Action.CopyToClipboard title="Copy Deal ID" content={deal.id} />
-                  {deal.website && <Action.OpenInBrowser title="Open Website" url={deal.website.startsWith('http') ? deal.website : `https://${deal.website}`} />}
-                  {deal.person_id?.email?.[0]?.value && <Action.CopyToClipboard title="Copy Email" content={deal.person_id.email[0].value} />}
+                  <Action.CopyToClipboard
+                    title="Copy Deal ID"
+                    content={deal.id}
+                  />
+                  {deal.website && (
+                    <Action.OpenInBrowser
+                      title="Open Website"
+                      url={
+                        deal.website.startsWith("http")
+                          ? deal.website
+                          : `https://${deal.website}`
+                      }
+                    />
+                  )}
+                  {deal.person_id?.email?.[0]?.value && (
+                    <Action.CopyToClipboard
+                      title="Copy Email"
+                      content={deal.person_id.email[0].value}
+                    />
+                  )}
                 </ActionPanel>
               }
             />
@@ -205,16 +311,28 @@ export default function SearchDatabases() {
             <List.Item
               key={`lead-${lead.lead_email || idx}-${idx}`}
               icon={{ source: Icon.Person, tintColor: Color.Blue }}
-              title={`${lead.lead_first_name || ""} ${lead.lead_last_name || ""}`.trim() || lead.lead_email}
+              title={
+                `${lead.lead_first_name || ""} ${lead.lead_last_name || ""}`.trim() ||
+                lead.lead_email
+              }
               subtitle={`${lead.lead_job_title || ""} @ ${lead.company_name || ""}`}
-              accessories={[
-                { text: "Prospect" }
-              ]}
+              accessories={[{ text: "Prospect" }]}
               actions={
                 <ActionPanel>
-                  <Action.CopyToClipboard title="Copy Email" content={lead.lead_email} />
-                  {lead.lead_linkedin && <Action.OpenInBrowser title="Open LinkedIn" url={lead.lead_linkedin} />}
-                  <Action.CopyToClipboard title="Copy Icebreaker" content={lead.lead_icebreaker} />
+                  <Action.CopyToClipboard
+                    title="Copy Email"
+                    content={lead.lead_email}
+                  />
+                  {lead.lead_linkedin && (
+                    <Action.OpenInBrowser
+                      title="Open LinkedIn"
+                      url={lead.lead_linkedin}
+                    />
+                  )}
+                  <Action.CopyToClipboard
+                    title="Copy Icebreaker"
+                    content={lead.lead_icebreaker}
+                  />
                 </ActionPanel>
               }
             />

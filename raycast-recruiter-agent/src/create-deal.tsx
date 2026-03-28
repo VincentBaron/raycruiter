@@ -1,13 +1,24 @@
 import React, { useState } from "react";
-import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
+import {
+  Form,
+  ActionPanel,
+  Action,
+  showToast,
+  Toast,
+  useNavigation,
+} from "@raycast/api";
 
 export default function CreateDeal() {
   const { pop } = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(values: { title: string; pipeline_id: string; stage_id: string }) {
+  async function handleSubmit(values: {
+    title: string;
+    pipeline_id: string;
+    stage_id: string;
+  }) {
     setIsLoading(true);
-    
+
     const toast = await showToast({
       style: Toast.Style.Animated,
       title: "Creating Deal...",
@@ -20,7 +31,7 @@ export default function CreateDeal() {
       toast.style = Toast.Style.Success;
       toast.title = "Deal Created";
       toast.message = `${values.title} added to Pipeline ${values.pipeline_id}, Stage ${values.stage_id}`;
-      
+
       // Go back to previous screen (or close form)
       pop();
     } catch (error) {
@@ -41,8 +52,13 @@ export default function CreateDeal() {
         </ActionPanel>
       }
     >
-      <Form.TextField id="title" title="Deal Title" placeholder="e.g. Acme Corp Hiring 2024" autoFocus />
-      
+      <Form.TextField
+        id="title"
+        title="Deal Title"
+        placeholder="e.g. Acme Corp Hiring 2024"
+        autoFocus
+      />
+
       <Form.Dropdown id="pipeline_id" title="Pipeline" defaultValue="1">
         <Form.Dropdown.Item value="1" title="Pipeline 1 (Standard Software)" />
         <Form.Dropdown.Item value="2" title="Pipeline 2 (Executive Search)" />
@@ -57,9 +73,17 @@ export default function CreateDeal() {
       </Form.Dropdown>
 
       <Form.Separator />
-      
-      <Form.TextField id="value" title="Expected Value (€)" placeholder="e.g. 50000" />
-      <Form.TextField id="website" title="Company Website" placeholder="https://..." />
+
+      <Form.TextField
+        id="value"
+        title="Expected Value (€)"
+        placeholder="e.g. 50000"
+      />
+      <Form.TextField
+        id="website"
+        title="Company Website"
+        placeholder="https://..."
+      />
     </Form>
   );
 }

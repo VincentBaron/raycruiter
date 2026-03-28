@@ -42,6 +42,10 @@ yarn-error.log*
 dummy_*.json
 *.json
 
+# Un-ignore critical configuration files
+!package.json
+!package-lock.json
+!tsconfig.json
 
 # Agent Rules
 .agent/

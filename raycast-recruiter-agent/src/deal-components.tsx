@@ -1,18 +1,40 @@
 import React, { useState } from "react";
-import { Detail, ActionPanel, Action, Icon, useNavigation, showToast, Toast, Form, LocalStorage } from "@raycast/api";
+import {
+  Detail,
+  ActionPanel,
+  Action,
+  Icon,
+  useNavigation,
+  showToast,
+  Toast,
+  Form,
+  LocalStorage,
+} from "@raycast/api";
 
 type Deal = any; // Simplifying for this file
 
-export function DealDetail({ deal, isDiffused, onToggleDiffused }: { deal: Deal, isDiffused?: boolean, onToggleDiffused?: () => void }) {
+export function DealDetail({
+  deal,
+  isDiffused,
+  onToggleDiffused,
+}: {
+  deal: Deal;
+  isDiffused?: boolean;
+  onToggleDiffused?: () => void;
+}) {
   const { push } = useNavigation();
   const [notes, setNotes] = useState<string[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
 
   async function loadData() {
-    const storedNotes = await LocalStorage.getItem<string>(`notes_deal_${deal.id}`);
+    const storedNotes = await LocalStorage.getItem<string>(
+      `notes_deal_${deal.id}`,
+    );
     if (storedNotes) setNotes(JSON.parse(storedNotes));
 
-    const storedActs = await LocalStorage.getItem<string>(`activities_deal_${deal.id}`);
+    const storedActs = await LocalStorage.getItem<string>(
+      `activities_deal_${deal.id}`,
+    );
     if (storedActs) setActivities(JSON.parse(storedActs));
   }
 
@@ -20,34 +42,38 @@ export function DealDetail({ deal, isDiffused, onToggleDiffused }: { deal: Deal,
     loadData();
   }, [deal.id]);
 
-  const notesMarkdown = notes.length > 0
-    ? notes.map((n) => `> ${n}`).join("\n\n")
-    : "*No call transcripts found for this deal yet. Use Cmd+K to Log a Note.*";
+  const notesMarkdown =
+    notes.length > 0
+      ? notes.map((n) => `> ${n}`).join("\n\n")
+      : "*No call transcripts found for this deal yet. Use Cmd+K to Log a Note.*";
 
-  const actsMarkdown = activities.length > 0
-    ? activities.map((a) => {
-        const dueDate = new Date(a.dueDate);
-        const today = new Date();
-        dueDate.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
+  const actsMarkdown =
+    activities.length > 0
+      ? activities
+          .map((a) => {
+            const dueDate = new Date(a.dueDate);
+            const today = new Date();
+            dueDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
 
-        const diffTime = dueDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffTime = dueDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        let statusText = "🟢 Upcoming";
-        let color = "#00A400"; // Green
-        if (diffDays < 0) {
-          statusText = "🔴 Overdue";
-          color = "#FF3B30"; // Red
-        } else if (diffDays === 0) {
-          statusText = "🟡 Today";
-          color = "#FF9500"; // Orange
-        }
+            let statusText = "🟢 Upcoming";
+            let color = "#00A400"; // Green
+            if (diffDays < 0) {
+              statusText = "🔴 Overdue";
+              color = "#FF3B30"; // Red
+            } else if (diffDays === 0) {
+              statusText = "🟡 Today";
+              color = "#FF9500"; // Orange
+            }
 
-        const dateStr = dueDate.toLocaleDateString();
-        return `- [${a.completed ? 'x' : ' '}] **${a.type.toUpperCase()}** (${statusText} - ${dateStr}): ${a.note}`;
-      }).join("\n")
-    : "*No upcoming activities scheduled.*";
+            const dateStr = dueDate.toLocaleDateString();
+            return `- [${a.completed ? "x" : " "}] **${a.type.toUpperCase()}** (${statusText} - ${dateStr}): ${a.note}`;
+          })
+          .join("\n")
+      : "*No upcoming activities scheduled.*";
 
   const markdown = `
 # ${deal.title}
@@ -70,16 +96,46 @@ ${notesMarkdown}
         <Detail.Metadata>
           <Detail.Metadata.Label title="Deal ID" text={deal.id} />
           <Detail.Metadata.TagList title="Pipeline">
-            <Detail.Metadata.TagList.Item text={`Pipeline ${deal.pipeline_id}`} color={"#00A400"} />
+            <Detail.Metadata.TagList.Item
+              text={`Pipeline ${deal.pipeline_id}`}
+              color={"#00A400"}
+            />
           </Detail.Metadata.TagList>
           <Detail.Metadata.TagList title="Current Stage">
-            <Detail.Metadata.TagList.Item text={`Stage ${deal.stage_id}`} color={"#2F7CFF"} />
+            <Detail.Metadata.TagList.Item
+              text={`Stage ${deal.stage_id}`}
+              color={"#2F7CFF"}
+            />
           </Detail.Metadata.TagList>
-          <Detail.Metadata.Label title="Expected Value" text={deal.value ? `€${deal.value.toLocaleString()}` : "€0"} icon={Icon.Coins} />
+          <Detail.Metadata.Label
+            title="Expected Value"
+            text={deal.value ? `€${deal.value.toLocaleString()}` : "€0"}
+            icon={Icon.Coins}
+          />
           <Detail.Metadata.Separator />
-          <Detail.Metadata.Label title="Diffused Status" text={isDiffused ? "Diffused 📢" : "Not Diffused"} icon={isDiffused ? Icon.Megaphone : Icon.Minus} />
-          {deal.website && <Detail.Metadata.Link title="Website" text={deal.website.replace("https://", "")} target={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} />}
-          {deal.linkedin && <Detail.Metadata.Link title="LinkedIn" text="Company Profile" target={deal.linkedin} />}
+          <Detail.Metadata.Label
+            title="Diffused Status"
+            text={isDiffused ? "Diffused 📢" : "Not Diffused"}
+            icon={isDiffused ? Icon.Megaphone : Icon.Minus}
+          />
+          {deal.website && (
+            <Detail.Metadata.Link
+              title="Website"
+              text={deal.website.replace("https://", "")}
+              target={
+                deal.website.startsWith("http")
+                  ? deal.website
+                  : `https://${deal.website}`
+              }
+            />
+          )}
+          {deal.linkedin && (
+            <Detail.Metadata.Link
+              title="LinkedIn"
+              text="Company Profile"
+              target={deal.linkedin}
+            />
+          )}
         </Detail.Metadata>
       }
       actions={
@@ -89,13 +145,29 @@ ${notesMarkdown}
               title="Log Call / Note"
               icon={Icon.Pencil}
               shortcut={{ modifiers: ["cmd"], key: "n" }}
-              onAction={() => push(<LogNoteForm entityId={`deal_${deal.id}`} entityTitle={deal.title} onSave={loadData} />)}
+              onAction={() =>
+                push(
+                  <LogNoteForm
+                    entityId={`deal_${deal.id}`}
+                    entityTitle={deal.title}
+                    onSave={loadData}
+                  />,
+                )
+              }
             />
             <Action
               title="Schedule Activity"
               icon={Icon.Calendar}
               shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
-              onAction={() => push(<LogActivityForm entityId={`deal_${deal.id}`} entityTitle={deal.title} onSave={loadData} />)}
+              onAction={() =>
+                push(
+                  <LogActivityForm
+                    entityId={`deal_${deal.id}`}
+                    entityTitle={deal.title}
+                    onSave={loadData}
+                  />,
+                )
+              }
             />
             {/* The Submenu to update Stages seamlessly */}
             <ActionPanel.Submenu
@@ -108,7 +180,11 @@ ${notesMarkdown}
                   key={stage}
                   title={`Move to Stage ${stage}`}
                   onAction={async () => {
-                    await showToast({ style: Toast.Style.Success, title: `Moved to Stage ${stage}`, message: "Deal updated in Synced DB." });
+                    await showToast({
+                      style: Toast.Style.Success,
+                      title: `Moved to Stage ${stage}`,
+                      message: "Deal updated in Synced DB.",
+                    });
                   }}
                 />
               ))}
@@ -127,8 +203,19 @@ ${notesMarkdown}
           </ActionPanel.Section>
 
           <ActionPanel.Section title="Links">
-            {deal.linkedin && <Action.OpenInBrowser title="Open LinkedIn" url={deal.linkedin} />}
-            {deal.website && <Action.OpenInBrowser title="Open Website" url={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} />}
+            {deal.linkedin && (
+              <Action.OpenInBrowser title="Open LinkedIn" url={deal.linkedin} />
+            )}
+            {deal.website && (
+              <Action.OpenInBrowser
+                title="Open Website"
+                url={
+                  deal.website.startsWith("http")
+                    ? deal.website
+                    : `https://${deal.website}`
+                }
+              />
+            )}
           </ActionPanel.Section>
         </ActionPanel>
       }
@@ -136,18 +223,29 @@ ${notesMarkdown}
   );
 }
 
-export function LogNoteForm({ entityId, entityTitle, onSave }: { entityId: string; entityTitle: string; onSave: () => void }) {
+export function LogNoteForm({
+  entityId,
+  entityTitle,
+  onSave,
+}: {
+  entityId: string;
+  entityTitle: string;
+  onSave: () => void;
+}) {
   const { pop } = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
   const [noteText, setNoteText] = useState("");
 
   async function fetchFathomSummary() {
     setIsLoading(true);
-    await showToast({ style: Toast.Style.Animated, title: "Fetching Fathom AI Transcript..." });
-    
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Fetching Fathom AI Transcript...",
+    });
+
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     const fakeTranscript = `**Fathom AI Call Summary**
 - **Topic:** Initial discovery call regarding ${entityTitle}
 - **Client Status:** Highly interested, but needs budget approval for next quarter.
@@ -157,30 +255,44 @@ export function LogNoteForm({ entityId, entityTitle, onSave }: { entityId: strin
 - **Sentiment:** Positive / Engaged`;
 
     setNoteText(fakeTranscript);
-    await showToast({ style: Toast.Style.Success, title: "Summary Imported", message: "Review and edit before saving." });
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Summary Imported",
+      message: "Review and edit before saving.",
+    });
     setIsLoading(false);
   }
 
   async function handleSubmit() {
     if (!noteText.trim()) {
-      await showToast({ style: Toast.Style.Failure, title: "Cannot save empty note" });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Cannot save empty note",
+      });
       return;
     }
     setIsLoading(true);
     await showToast({ style: Toast.Style.Animated, title: "Saving Note..." });
-    
+
     // Write note dynamically
     const key = `notes_${entityId}`;
     const existingStored = await LocalStorage.getItem<string>(key);
     const existing = existingStored ? JSON.parse(existingStored) : [];
-    
-    const timestamp = new Date().toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
+
+    const timestamp = new Date().toLocaleString("en-US", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
     const formatted = `**${timestamp}**: \n\n${noteText}`;
-    
+
     const updated = [formatted, ...existing];
     await LocalStorage.setItem(key, JSON.stringify(updated));
-    
-    await showToast({ style: Toast.Style.Success, title: "Note Logged", message: "Saved to Knowledge Base" });
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Note Logged",
+      message: "Saved to Knowledge Base",
+    });
     setIsLoading(false);
     onSave();
     pop();
@@ -192,16 +304,25 @@ export function LogNoteForm({ entityId, entityTitle, onSave }: { entityId: strin
       isLoading={isLoading}
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Save Note" onSubmit={handleSubmit} icon={Icon.SaveDocument} />
-          <Action title="Fetch Desktop Call from Fathom AI" onAction={fetchFathomSummary} icon={Icon.Wand} shortcut={{ modifiers: ["cmd"], key: "f" }} />
+          <Action.SubmitForm
+            title="Save Note"
+            onSubmit={handleSubmit}
+            icon={Icon.SaveDocument}
+          />
+          <Action
+            title="Fetch Desktop Call from Fathom AI"
+            onAction={fetchFathomSummary}
+            icon={Icon.Wand}
+            shortcut={{ modifiers: ["cmd"], key: "f" }}
+          />
         </ActionPanel>
       }
     >
-      <Form.TextArea 
-        id="note" 
-        title="Call Notes / Summary" 
-        placeholder="Type the summary of the interaction..." 
-        autoFocus 
+      <Form.TextArea
+        id="note"
+        title="Call Notes / Summary"
+        placeholder="Type the summary of the interaction..."
+        autoFocus
         value={noteText}
         onChange={setNoteText}
       />
@@ -209,26 +330,48 @@ export function LogNoteForm({ entityId, entityTitle, onSave }: { entityId: strin
   );
 }
 
-export function LogActivityForm({ entityId, entityTitle, onSave }: { entityId: string, entityTitle: string, onSave: () => void }) {
+export function LogActivityForm({
+  entityId,
+  entityTitle,
+  onSave,
+}: {
+  entityId: string;
+  entityTitle: string;
+  onSave: () => void;
+}) {
   const { pop } = useNavigation();
   const [activityType, setActivityType] = useState("call");
   const [dueDate, setDueDate] = useState<Date | null>(new Date());
   const [noteText, setNoteText] = useState("");
 
   async function handleSubmit() {
-    await showToast({ style: Toast.Style.Animated, title: "Saving Activity..." });
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Saving Activity...",
+    });
     const key = `activities_${entityId}`;
     const existingStored = await LocalStorage.getItem<string>(key);
     const existing = existingStored ? JSON.parse(existingStored) : [];
-    
-    const newAct = { type: activityType, dueDate: dueDate?.toISOString(), note: noteText, completed: false };
+
+    const newAct = {
+      type: activityType,
+      dueDate: dueDate?.toISOString(),
+      note: noteText,
+      completed: false,
+    };
     const updated = [newAct, ...existing];
     await LocalStorage.setItem(key, JSON.stringify(updated));
-    
-    // Globally save the next closest activity date to display it on list views natively
-    await LocalStorage.setItem(`next_activity_${entityId}`, dueDate?.toISOString() || "");
 
-    await showToast({ style: Toast.Style.Success, title: "Activity Scheduled!" });
+    // Globally save the next closest activity date to display it on list views natively
+    await LocalStorage.setItem(
+      `next_activity_${entityId}`,
+      dueDate?.toISOString() || "",
+    );
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Activity Scheduled!",
+    });
     onSave();
     pop();
   }
@@ -238,20 +381,48 @@ export function LogActivityForm({ entityId, entityTitle, onSave }: { entityId: s
       navigationTitle={`Schedule Activity: ${entityTitle}`}
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Save Activity" onSubmit={handleSubmit} icon={Icon.Calendar} />
+          <Action.SubmitForm
+            title="Save Activity"
+            onSubmit={handleSubmit}
+            icon={Icon.Calendar}
+          />
         </ActionPanel>
       }
     >
-      <Form.Dropdown id="type" title="Activity Type" value={activityType} onChange={setActivityType}>
+      <Form.Dropdown
+        id="type"
+        title="Activity Type"
+        value={activityType}
+        onChange={setActivityType}
+      >
         <Form.Dropdown.Item value="call" title="Call" icon={Icon.Phone} />
         <Form.Dropdown.Item value="email" title="Email" icon={Icon.Envelope} />
-        <Form.Dropdown.Item value="meeting" title="Meeting" icon={Icon.TwoPeople} />
-        <Form.Dropdown.Item value="task" title="To-do Task" icon={Icon.CheckCircle} />
+        <Form.Dropdown.Item
+          value="meeting"
+          title="Meeting"
+          icon={Icon.TwoPeople}
+        />
+        <Form.Dropdown.Item
+          value="task"
+          title="To-do Task"
+          icon={Icon.CheckCircle}
+        />
       </Form.Dropdown>
-      
-      <Form.DatePicker id="dueDate" title="Due Date" value={dueDate} onChange={setDueDate} />
-      
-      <Form.TextArea id="note" title="Notes / Description" placeholder="What needs to happen?" value={noteText} onChange={setNoteText} />
+
+      <Form.DatePicker
+        id="dueDate"
+        title="Due Date"
+        value={dueDate}
+        onChange={setDueDate}
+      />
+
+      <Form.TextArea
+        id="note"
+        title="Notes / Description"
+        placeholder="What needs to happen?"
+        value={noteText}
+        onChange={setNoteText}
+      />
     </Form>
   );
 }

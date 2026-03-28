@@ -21,17 +21,17 @@ function readPartialJsonArray(filePath: string, bytesToRead = 3 * 1024 * 1024) {
     const buffer = Buffer.alloc(bytesToRead);
     const bytesRead = fs.readSync(fd, buffer as any, 0, bytesToRead, 0);
     fs.closeSync(fd);
-    
+
     let partial = buffer.toString("utf8", 0, bytesRead);
-    
+
     const lastObjIdx = partial.lastIndexOf("},");
     if (lastObjIdx > 0) {
       return JSON.parse(partial.substring(0, lastObjIdx + 1) + "]");
     }
-    
+
     const fullEndIdx = partial.lastIndexOf("}]");
     if (fullEndIdx > 0) {
-        return JSON.parse(partial.substring(0, fullEndIdx + 2));
+      return JSON.parse(partial.substring(0, fullEndIdx + 2));
     }
     return JSON.parse(partial);
   } catch (e) {
@@ -42,7 +42,9 @@ function readPartialJsonArray(filePath: string, bytesToRead = 3 * 1024 * 1024) {
 
 export default function ViewCandidates() {
   const [searchText, setSearchText] = useState("");
-  const rawCandidates: Candidate[] = readPartialJsonArray("/Users/vincentbaron/raycruiter/raycast-recruiter-agent/candidates.json");
+  const rawCandidates: Candidate[] = readPartialJsonArray(
+    "/Users/vincentbaron/raycruiter/raycast-recruiter-agent/candidates.json",
+  );
 
   const candidatesWithIds = useMemo(() => {
     return rawCandidates.map((c, i) => ({ ...c, shortId: `c${i + 1}` }));
@@ -52,17 +54,22 @@ export default function ViewCandidates() {
   // Memoize it and slice the first 1000 items, or filter based on search
   const filteredCandidates = useMemo(() => {
     const term = searchText.toLowerCase();
-    
+
     let matched = 0;
     const results = [];
-    
+
     for (const c of candidatesWithIds) {
       if (matched >= 300) break; // Limit UI render performance
-      
+
       const fullName = `${c.firstname || ""} ${c.lastname || ""}`.toLowerCase();
       const vacancy = (c.vacancy || "").toLowerCase();
-      
-      if (!term || fullName.includes(term) || vacancy.includes(term) || c.shortId!.includes(term)) {
+
+      if (
+        !term ||
+        fullName.includes(term) ||
+        vacancy.includes(term) ||
+        c.shortId!.includes(term)
+      ) {
         results.push(c);
         matched++;
       }
@@ -88,7 +95,11 @@ export default function ViewCandidates() {
       navigationTitle="ATS Candidates"
     >
       {Object.entries(groupedCandidates).map(([vacancy, candidates]) => (
-        <List.Section key={vacancy} title={vacancy} subtitle={`${candidates.length} candidates visible`}>
+        <List.Section
+          key={vacancy}
+          title={vacancy}
+          subtitle={`${candidates.length} candidates visible`}
+        >
           {candidates.map((c, i) => {
             const fullName = `${c.firstname} ${c.lastname}`;
             return (
@@ -100,8 +111,16 @@ export default function ViewCandidates() {
                 accessories={[{ text: c.email }]}
                 actions={
                   <ActionPanel>
-                    <Action.CopyToClipboard title="Copy Email" content={c.email || ""} />
-                    {c.phone && <Action.CopyToClipboard title="Copy Phone" content={c.phone} />}
+                    <Action.CopyToClipboard
+                      title="Copy Email"
+                      content={c.email || ""}
+                    />
+                    {c.phone && (
+                      <Action.CopyToClipboard
+                        title="Copy Phone"
+                        content={c.phone}
+                      />
+                    )}
                   </ActionPanel>
                 }
               />

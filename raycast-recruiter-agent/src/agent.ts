@@ -1,6 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
 
-
 export type Candidate = {
   id: string;
   name: string;
@@ -9,7 +8,9 @@ export type Candidate = {
   skills: string[];
 };
 
-export async function sourceCandidatesAgent(query: string): Promise<Candidate[]> {
+export async function sourceCandidatesAgent(
+  query: string,
+): Promise<Candidate[]> {
   // Simulate network delay for real UI feel
   await new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -39,7 +40,10 @@ export async function sourceCandidatesAgent(query: string): Promise<Candidate[]>
   ];
 }
 
-export async function saveCandidatesToAts(candidates: Candidate[], targetJobId: string): Promise<string[]> {
+export async function saveCandidatesToAts(
+  candidates: Candidate[],
+  targetJobId: string,
+): Promise<string[]> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 600));
 

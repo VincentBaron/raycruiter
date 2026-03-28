@@ -12,9 +12,12 @@ interface EntityProps {
 }
 
 const getAvatar = (name: string) => {
-  if (name.includes("Marie")) return { source: "marie.png", mask: Image.Mask.Circle };
-  if (name.includes("Alex")) return { source: "alex.jpeg", mask: Image.Mask.Circle };
-  if (name.includes("Jane")) return { source: "1747670127259.jpeg", mask: Image.Mask.Circle }; 
+  if (name.includes("Marie"))
+    return { source: "marie.png", mask: Image.Mask.Circle };
+  if (name.includes("Alex"))
+    return { source: "alex.jpeg", mask: Image.Mask.Circle };
+  if (name.includes("Jane"))
+    return { source: "1747670127259.jpeg", mask: Image.Mask.Circle };
   return Icon.PersonCircle;
 };
 
@@ -23,13 +26,18 @@ export function EntityListItem({ type, data }: EntityProps) {
   let subtitle = data.clientName || data.company || "";
   let icon: any = Icon.Circle;
 
-  const actionIcon = type === "Prospect" ? Icon.Envelope : type === "Candidate" ? Icon.Phone : Icon.Calendar;
-  
+  const actionIcon =
+    type === "Prospect"
+      ? Icon.Envelope
+      : type === "Candidate"
+        ? Icon.Phone
+        : Icon.Calendar;
+
   const daysDiff = data.dueDate ? data.dueDate : getFakeDueDateOffset(data.id);
-  
+
   let dateText = "";
   let dateColor: Color.ColorLike = Color.Blue;
-  
+
   if (daysDiff < 0) {
     dateText = `${Math.abs(daysDiff)}d`;
     dateColor = Color.Red;
@@ -42,26 +50,40 @@ export function EntityListItem({ type, data }: EntityProps) {
   }
 
   const rawDate = data.createdAt || data.appliedAt;
-  const createdStr = rawDate ? new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Today";
-  const assignee = data.assignee || (type === "Candidate" ? "Marie" : "Alex Recruiter");
+  const createdStr = rawDate
+    ? new Date(rawDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "Today";
+  const assignee =
+    data.assignee || (type === "Candidate" ? "Marie" : "Alex Recruiter");
 
   let accessories: List.Item.Accessory[] = [
     { icon: actionIcon, tooltip: "Next Action Type" },
-    { text: dateText, icon: { source: Icon.CircleFilled, tintColor: dateColor }, tooltip: "Due Date" },
+    {
+      text: dateText,
+      icon: { source: Icon.CircleFilled, tintColor: dateColor },
+      tooltip: "Due Date",
+    },
     { text: createdStr, tooltip: "Created" },
-    { icon: getAvatar(assignee), tooltip: `Assignee: ${assignee}` }
+    { icon: getAvatar(assignee), tooltip: `Assignee: ${assignee}` },
   ];
 
   let ActionsComponent = null;
 
   switch (type) {
     case "Deal":
-      icon = SignalStrengthIcon({ strength: ["won", "open"].includes(data.status) ? "high" : "low" });
+      icon = SignalStrengthIcon({
+        strength: ["won", "open"].includes(data.status) ? "high" : "low",
+      });
       ActionsComponent = <DealActions deal={data} />;
       break;
 
     case "Job":
-      icon = SignalStrengthIcon({ strength: data.status === "open" ? "medium" : "low" });
+      icon = SignalStrengthIcon({
+        strength: data.status === "open" ? "medium" : "low",
+      });
       subtitle = `${data.location} • ${data.salary}`;
       ActionsComponent = <JobActions job={data} />;
       break;
@@ -72,7 +94,11 @@ export function EntityListItem({ type, data }: EntityProps) {
       break;
 
     case "Candidate":
-      icon = SignalStrengthIcon({ strength: ["hired", "offer", "interview"].includes(data.stage) ? "high" : "medium" });
+      icon = SignalStrengthIcon({
+        strength: ["hired", "offer", "interview"].includes(data.stage)
+          ? "high"
+          : "medium",
+      });
       subtitle = `Applied: ${createdStr}`;
       ActionsComponent = <CandidateActions candidate={data} />;
       break;

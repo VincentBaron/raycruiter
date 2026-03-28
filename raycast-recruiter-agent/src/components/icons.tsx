@@ -1,6 +1,10 @@
 import { Icon, Color } from "@raycast/api";
 
-export function SignalStrengthIcon({ strength }: { strength: "high" | "medium" | "low" }) {
+export function SignalStrengthIcon({
+  strength,
+}: {
+  strength: "high" | "medium" | "low";
+}) {
   switch (strength) {
     case "high":
       return { source: Icon.ArrowUp, tintColor: Color.Red };
@@ -13,7 +17,11 @@ export function SignalStrengthIcon({ strength }: { strength: "high" | "medium" |
   }
 }
 
-export function CandidateScoreIcon({ score }: { score: "empty" | "quarter" | "half" | "full" }) {
+export function CandidateScoreIcon({
+  score,
+}: {
+  score: "empty" | "quarter" | "half" | "full";
+}) {
   switch (score) {
     case "full":
       return { source: Icon.CircleFilled, tintColor: Color.Green };
@@ -27,7 +35,11 @@ export function CandidateScoreIcon({ score }: { score: "empty" | "quarter" | "ha
   }
 }
 
-export function StatusIcon({ status }: { status: "open" | "closed" | "won" | "lost" }) {
+export function StatusIcon({
+  status,
+}: {
+  status: "open" | "closed" | "won" | "lost";
+}) {
   switch (status) {
     case "won":
       return { source: Icon.CheckCircle, tintColor: Color.Green };

@@ -34,6 +34,27 @@ const mockMantiksLeadSearch = (query: string) => {
   ];
 };
 
+// Simulated Mantiks Deal Generation API
+const mockMantiksDealSearch = (industry: string, amount: number) => {
+  const deals = [];
+  for (let i = 0; i < (amount || 3); i++) {
+    deals.push({
+      id: `mantiks-deal-${Date.now()}-${i}`,
+      title: `Mantiks Generated ${industry || "Tech"} Pipeline`,
+      status: "open",
+      value: Math.floor(Math.random() * 80000) + 20000, // Random $20k to $100k
+      website: `fake-${(industry || "AI").toLowerCase().replace(" ", "")}-deal-${i}.ai`,
+      next_activity_date: new Date(Date.now() + Math.random() * 10000000000).toISOString(),
+      person_id: {
+        name: `CEO of Mantiks Lead ${i + 1}`,
+        email: [{ value: `founder@mantiks.ai` }],
+        phone: [{ value: "+1 555 999 8888" }]
+      }
+    });
+  }
+  return deals;
+};
+
 export default function Command() {
   const [apiKey, setApiKey] = useState<string | undefined>();
   const [isLoadingKey, setIsLoadingKey] = useState(true);
@@ -43,6 +64,7 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(false);
   const [sourcedLeads, setSourcedLeads] = useState<any[] | null>(null);
   const [foundDeals, setFoundDeals] = useState<any[] | null>(null);
+  const [generatedDeals, setGeneratedDeals] = useState<any[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -83,14 +105,16 @@ export default function Command() {
   }
 
 
-  const onSubmit = async () => {
-    if (!searchText.trim()) return;
-    const userQuery = searchText;
-    setMessages((prev) => [{ role: "user", text: userQuery }, ...prev]);
+  const onSubmit = async (queryOverride?: string | any) => {
+    const finalQuery = typeof queryOverride === "string" ? queryOverride : searchText;
+    if (!finalQuery.trim()) return;
+    
+    setMessages((prev) => [{ role: "user", text: finalQuery }, ...prev]);
     setSearchText("");
     setIsLoading(true);
     setSourcedLeads(null); // clear previous leads
     setFoundDeals(null); // clear previous deals
+    setGeneratedDeals(null); // clear previous generations
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
@@ -108,8 +132,24 @@ export default function Command() {
                   items: { type: SchemaType.STRING },
                   description: "A list of specific companies, person names, or inferred tech industry names generated intelligently by you based on the user's intent to query the local ATS (e.g. ['tudigo', 'karmen', 'fintech', 'john']).",
                 },
+                orderBy: {
+                  type: SchemaType.STRING,
+                  description: "Optional sorting request (e.g. 'date' to order by closest due date, or 'value' for deal size).",
+                },
               },
               required: ["keywords"],
+            },
+          },
+          {
+            name: "generate_mantiks_deals",
+            description: "Generate and auto-pipeline highly qualified B2B deals sourced via Mantiks.",
+            parameters: {
+              type: SchemaType.OBJECT,
+              properties: {
+                industry: { type: SchemaType.STRING, description: "The industry to source leads in." },
+                amount: { type: SchemaType.NUMBER, description: "Number of deals to generate." }
+              },
+              required: ["industry", "amount"],
             },
           },
         ],
@@ -118,7 +158,7 @@ export default function Command() {
       const model = genAI.getGenerativeModel({ 
         model: "gemini-2.5-flash",
         tools: [searchDealsTool],
-        systemInstruction: "You are an expert recruiter and pipeline manager. When asked about deals or companies, strictly call the 'search_deals' function to fetch real data from the local ATS. If the user asks for leads or sourcing, output 'FUNCTION_CALL: SOURCE_LEADS'. Always format output nicely using Markdown."
+        systemInstruction: "You are an expert recruiter and pipeline manager. When asked about existing deals, use 'search_deals'. IF the user asks to explicitly 'generate', 'source', or 'find brand new deals via Mantiks', ALWAYS call 'generate_mantiks_deals'. Always format output nicely using Markdown."
       });
 
       // Maintain chat history for function calling loop
@@ -129,15 +169,19 @@ export default function Command() {
         })).reverse() // Reverse to chronological order
       });
 
-      const result = await chat.sendMessage(userQuery);
+      const result = await chat.sendMessage(finalQuery);
       let response = result.response;
 
       // Intercept Function Calls for Local RAG filtering
       const calls = response.functionCalls ? response.functionCalls() : undefined;
       if (calls && calls.length > 0) {
         const call: FunctionCall = calls[0];
+        
         if (call.name === "search_deals") {
+          console.log("🤖 [RAG INTERCEPT] AI invoked 'search_deals'. Arguments:", JSON.stringify(call.args));
+          
           const rawKeywords = (call.args as any).keywords;
+          const orderBy = typeof (call.args as any).orderBy === 'string' ? (call.args as any).orderBy.toLowerCase() : null;
           const keywords: string[] = Array.isArray(rawKeywords) ? rawKeywords.map(k => String(k).toLowerCase()) : [];
           
           const dealsPath = path.join(environment.assetsPath, "deals.json");
@@ -146,28 +190,70 @@ export default function Command() {
           let matches = [];
           
           if (keywords.length === 0) {
-            // Default return for empty searches
-            matches = (dealsData as any[]).slice(0, 15);
+            matches = (dealsData as any[]);
           } else {
             matches = (dealsData as any[])
               .filter((d) => {
                 const title = d.title?.toLowerCase() || "";
                 const website = d.website?.toLowerCase() || "";
                 const personName = d.person_id?.name?.toLowerCase() || "";
-                
-                // Match if ANY of the AI-provided keywords are found in the deal fields
                 return keywords.some(k => title.includes(k) || website.includes(k) || personName.includes(k));
-              })
-              .slice(0, 15); // Send max 15 to perfectly balance context vs memory
+              });
           }
+
+          // Dynamic Math Sorting
+          if (orderBy === "date") {
+            matches.sort((a, b) => new Date(a.next_activity_date || 0).getTime() - new Date(b.next_activity_date || 0).getTime());
+          } else if (orderBy === "value" || orderBy === "signal") {
+            matches.sort((a, b) => (b.value || 0) - (a.value || 0)); // High value proxy for signal
+          }
+          
+          matches = matches.slice(0, 15); // Send max 15 to perfectly balance context vs memory
+          
+          console.log(`✅ [RAG RETURN] Sending ${matches.length} matches back to AI. Example deal title:`, matches[0]?.title || "None");
           
           setFoundDeals(matches);
 
-          // Send the specific JSON block back to the chat model
+          // Strip ugly backend internal IDs so the LLM is forced to use human-readable titles
+          const aiCleanedMatches = matches.map(m => ({
+            title: m.title || m.website || m.person_id?.name || "Pipeline Deal",
+            value: m.value,
+            status: m.status,
+            date: m.next_activity_date
+          }));
+
           const functionResult = await chat.sendMessage([{
             functionResponse: {
               name: "search_deals",
-              response: { results: matches }
+              response: { results: aiCleanedMatches }
+            }
+          }]);
+          
+          response = functionResult.response;
+        } else if (call.name === "generate_mantiks_deals") {
+          console.log("🤖 [MANTIKS INTERCEPT] AI invoked 'generate_mantiks_deals'. Arguments:", JSON.stringify(call.args));
+          
+          const industry = (call.args as any).industry || "Tech";
+          const amount = (call.args as any).amount || 3;
+          
+          const newDeals = mockMantiksDealSearch(industry, amount);
+          
+          console.log(`✨ [MANTIKS RETURN] Generated ${newDeals.length} deals. Sending back to AI.`);
+          
+          setGeneratedDeals(newDeals);
+
+          // Clean generated deals to prevent alphanumeric key leakage
+          const aiCleanedGens = newDeals.map(m => ({
+            title: m.title,
+            value: m.value,
+            status: m.status,
+            date: m.next_activity_date
+          }));
+
+          const functionResult = await chat.sendMessage([{
+            functionResponse: {
+              name: "generate_mantiks_deals",
+              response: { results: aiCleanedGens }
             }
           }]);
           
@@ -176,12 +262,13 @@ export default function Command() {
       }
 
       const responseText = response.text();
+      console.log("📝 [AI TEXT RESPONSE] Raw string output intercepted from Gemini:", responseText);
 
       if (responseText.includes("FUNCTION_CALL: SOURCE_LEADS")) {
         // Trigger Mantiks API
         setIsLoading(true);
         setTimeout(() => {
-          const leads = mockMantiksLeadSearch(userQuery);
+          const leads = mockMantiksLeadSearch(finalQuery);
           setSourcedLeads(leads);
           setMessages((prev) => [{ role: "system", text: `(System) Successfully found ${leads.length} prospect(s) via Mantiks API.` }, ...prev]);
           setIsLoading(false);
@@ -227,15 +314,41 @@ export default function Command() {
       searchText={searchText}
       onSearchTextChange={setSearchText}
       navigationTitle="Ask Raycruiter"
-      isShowingDetail={(sourcedLeads !== null && sourcedLeads.length > 0) || (foundDeals !== null && foundDeals.length > 0)}
+      isShowingDetail={(sourcedLeads !== null && sourcedLeads.length > 0) || (foundDeals !== null && foundDeals.length > 0) || (generatedDeals !== null && generatedDeals.length > 0)}
     >
+      {/* EMPTY STATE SUGGESTIONS */}
+      {searchText.length === 0 && messages.length === 0 && !sourcedLeads && !foundDeals && !generatedDeals && (
+        <List.Section title="Suggested Prompts">
+          <List.Item
+            title="Sort active deals by due date"
+            icon={Icon.LightBulb}
+            actions={<ActionPanel><Action title="Ask AI" icon={Icon.Wand} onAction={() => onSubmit("Sort active deals by due date")} /></ActionPanel>}
+          />
+          <List.Item
+            title="Generate 5 new Fintech leads via Mantiks"
+            icon={Icon.LightBulb}
+            actions={<ActionPanel><Action title="Ask AI" icon={Icon.Wand} onAction={() => onSubmit("Generate 5 new Fintech leads via Mantiks")} /></ActionPanel>}
+          />
+          <List.Item
+            title="Find the highest value deals in my pipeline"
+            icon={Icon.LightBulb}
+            actions={<ActionPanel><Action title="Ask AI" icon={Icon.Wand} onAction={() => onSubmit("Find the highest value deals in my pipeline")} /></ActionPanel>}
+          />
+          <List.Item
+            title="Look up the status of the Karmen deal"
+            icon={Icon.LightBulb}
+            actions={<ActionPanel><Action title="Ask AI" icon={Icon.Wand} onAction={() => onSubmit("Look up the status of the Karmen deal")} /></ActionPanel>}
+          />
+        </List.Section>
+      )}
+
       {searchText.length > 0 && (
         <List.Item
           title={`Ask Raycruiter to '${searchText}'`}
           icon={Icon.Wand}
           actions={
             <ActionPanel>
-              <Action title="Send Request" icon={Icon.Message} onAction={onSubmit} />
+              <Action title="Send Request" icon={Icon.Message} onAction={() => onSubmit()} />
             </ActionPanel>
           }
         />
@@ -250,6 +363,10 @@ export default function Command() {
               title={deal.title || "Unknown Deal"}
               subtitle={deal.status ? `Status: ${deal.status}` : undefined}
               icon={Icon.Folder}
+              accessories={[
+                { text: deal.value ? `$${deal.value.toLocaleString()}` : "" },
+                deal.next_activity_date ? { date: new Date(deal.next_activity_date), tooltip: "Next Activity Date" } : {}
+              ].filter((a) => Object.keys(a).length > 0)}
               detail={
                 <List.Item.Detail
                   metadata={
@@ -310,6 +427,50 @@ export default function Command() {
                   <Action.OpenInBrowser title="Power Dial" url={`tel:${lead.phone.replace(/[^0-9+]/g, "")}`} icon={Icon.Phone} />
                   <Action.CopyToClipboard title="Copy Email" content={lead.email} shortcut={{ modifiers: ["cmd"], key: "e" }} />
                   <Action.CopyToClipboard title="Copy Phone Number" content={lead.phone} shortcut={{ modifiers: ["cmd", "shift"], key: "p" }} />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+
+      {/* RENDER MANTIKS GENERATED DEALS */}
+      {generatedDeals && generatedDeals.length > 0 && (
+        <List.Section title="✨ AI Sourced Deals (Mantiks)">
+          {generatedDeals.map((deal) => (
+            <List.Item
+              key={deal.id}
+              title={deal.title || "Unknown Deal"}
+              subtitle={deal.status ? `Status: ${deal.status}` : undefined}
+              icon={Icon.Stars}
+              accessories={[
+                { text: deal.value ? `$${deal.value.toLocaleString()}` : "", tooltip: "Deal Value (Mantiks Estimate)" },
+                deal.next_activity_date ? { date: new Date(deal.next_activity_date), tooltip: "Auto-Scheduled Kickoff" } : {}
+              ].filter((a) => Object.keys(a).length > 0)}
+              detail={
+                <List.Item.Detail
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label title="Deal Name" text={deal.title || "Unknown"} />
+                      <List.Item.Detail.Metadata.Label title="Deal ID" text={deal.id?.toString() || ""} />
+                      {deal.website && <List.Item.Detail.Metadata.Link title="Website" target={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} text={deal.website} />}
+                      <List.Item.Detail.Metadata.Separator />
+                      <List.Item.Detail.Metadata.Label title="Generated Target" text={deal.person_id?.name || "N/A"} icon={Icon.Person} />
+                      {deal.person_id?.email?.[0]?.value && (
+                        <List.Item.Detail.Metadata.Label title="Email" text={deal.person_id.email[0].value} icon={Icon.Envelope} />
+                      )}
+                      {deal.person_id?.phone?.[0]?.value && (
+                        <List.Item.Detail.Metadata.Label title="Phone" text={deal.person_id.phone[0].value} icon={Icon.Phone} />
+                      )}
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
+              actions={
+                <ActionPanel>
+                  {deal.website && <Action.OpenInBrowser title="Open Website" url={deal.website.startsWith("http") ? deal.website : `https://${deal.website}`} />}
+                  {deal.person_id?.email?.[0]?.value && <Action.CopyToClipboard title="Copy Email" content={deal.person_id.email[0].value} />}
+                  {deal.person_id?.phone?.[0]?.value && <Action.CopyToClipboard title="Copy Phone" content={deal.person_id.phone[0].value} />}
                 </ActionPanel>
               }
             />
